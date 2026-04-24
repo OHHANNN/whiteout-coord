@@ -1,0 +1,45 @@
+.wrap {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+
+  @include mobile {
+    gap: 4px;
+  }
+}
+
+.digit {
+  width: 42px;
+  height: 54px;
+  background: $bg-elevated;
+  border: 1px solid $hud-cyan-line;
+  font-family: $font-mono;
+  font-size: 24px;
+  font-weight: 500;
+  color: $hud-cyan;
+  text-align: center;
+  caret-color: $hud-cyan;
+  text-shadow: $glow-cyan;
+  transition: border-color 0.15s, box-shadow 0.15s;
+
+  &:focus {
+    border-color: $hud-cyan;
+    box-shadow: 0 0 0 1px $hud-cyan, 0 0 12px rgba(0, 255, 255, 0.4);
+  }
+
+  @include mobile {
+    width: 34px;
+    height: 46px;
+    font-size: 20px;
+  }
+}
+
+.active {
+  border-color: $hud-cyan;
+  box-shadow: 0 0 0 1px $hud-cyan, 0 0 12px rgba(0, 255, 255, 0.4);
+}
+
+.empty {
+  color: $text-dim;
+  text-shadow: none;
+}

@@ -1,0 +1,54 @@
+{
+  "brand": {
+    "kicker": "WHITEOUT · SURVIVAL",
+    "title": "KING CITY COMMAND",
+    "subtitle": "REAL-TIME RALLY COORDINATION",
+    "desc": "Enter the 8-digit PIN to join a command room. All drivers and the commander must use the same PIN."
+  },
+  "clock": {
+    "utc_label": "UTC · UNIVERSAL COORDINATED TIME",
+    "sync": "SYNC"
+  },
+  "entry": {
+    "pin_label": "ACCESS · PIN",
+    "random": "Random",
+    "enter_room": "Enter Room",
+    "hint": "Share the PIN with your drivers via Discord / LINE after creating a room.",
+    "pin_invalid": "PIN must be 8 digits"
+  },
+  "lang": {
+    "zh": "繁中",
+    "en": "EN"
+  },
+  "room": {
+    "commander": "Commander",
+    "drivers_online": "Drivers {{count}} / Online {{online}}",
+    "share_pin": "Share PIN",
+    "leave": "Leave",
+    "target_landing": "TARGET · LANDING TIME",
+    "t_minus": "T-MINUS · LANDING",
+    "all_land_sim": "ALL RALLIES LAND SIMULTANEOUSLY",
+    "objective": "OBJECTIVE",
+    "lock_and_start": "Lock & Start",
+    "driver_list": "Drivers",
+    "col_driver": "Driver",
+    "col_march": "March",
+    "col_launch": "Launch · UTC",
+    "col_until_launch": "Until Launch",
+    "col_status": "Status",
+    "role_suicide": "SUICIDE",
+    "status_ready": "READY",
+    "status_adjusting": "ADJUSTING",
+    "status_offline": "OFFLINE",
+    "new_driver": "NEW DRIVER",
+    "add": "Add",
+    "clear": "Clear",
+    "export": "Export",
+    "suicide_check": "Suicide (first)"
+  },
+  "error": {
+    "room_not_found": "Room not found or expired",
+    "connection_lost": "Connection lost",
+    "firebase_missing": "Firebase config missing"
+  }
+}

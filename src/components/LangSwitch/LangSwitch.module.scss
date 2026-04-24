@@ -1,0 +1,28 @@
+.wrap {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid $hud-cyan-line;
+  background: $bg-elevated;
+}
+
+.btn {
+  height: 24px;
+  padding: 0 8px;
+  font-family: $font-mono;
+  font-size: 11px;
+  color: $text-dim;
+  background: transparent;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+
+  &:hover {
+    color: $hud-cyan-dim;
+  }
+}
+
+.active {
+  background: $hud-cyan-soft;
+  color: $hud-cyan;
+  text-shadow: $glow-cyan;
+}

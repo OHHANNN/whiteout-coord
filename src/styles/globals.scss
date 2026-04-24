@@ -1,0 +1,89 @@
+@use './variables.scss' as *;
+@use './mixins.scss' as *;
+
+// ========== CSS 重置 ==========
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  min-height: 100vh;
+  background: $bg-deep;
+  color: $text;
+  font-family: $font-sans;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+#root {
+  min-height: 100vh;
+  position: relative;
+}
+
+// ========== 全域視覺效果 ==========
+
+// Scanline overlay（全站）
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  @include scanlines();
+  pointer-events: none;
+  z-index: 100;
+
+  @include reduced-motion {
+    display: none;
+  }
+}
+
+// 背景 glow
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 20% 10%, rgba(0, 128, 255, 0.15), transparent 50%),
+    radial-gradient(ellipse at 80% 90%, rgba(0, 255, 255, 0.08), transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+// 讓所有 input/button 沒有醜預設外觀
+input,
+button,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: none;
+  outline: none;
+}
+
+button {
+  cursor: pointer;
+}
+
+// 選取文字高亮
+::selection {
+  background: $hud-cyan-soft;
+  color: $text;
+}
+
+// ========== Mantine theme override ==========
+// 把 Mantine 預設色蓋成 HUD 風
+[data-mantine-color-scheme='dark'] {
+  --mantine-color-body: #{$bg-deep};
+  --mantine-color-text: #{$text};
+}

@@ -1,0 +1,71 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: $font-display;
+  font-weight: 700;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, box-shadow 0.15s, opacity 0.15s;
+  position: relative;
+  @include chamfered(6px);
+  border: 1px solid $hud-cyan;
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+.md {
+  height: 40px;
+  padding: 0 20px;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+}
+
+.sm {
+  height: 30px;
+  padding: 0 12px;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+}
+
+.block {
+  flex: 1;
+  width: 100%;
+}
+
+.primary {
+  background: $hud-cyan;
+  color: $bg-deep;
+  box-shadow: $glow-cyan;
+
+  &:hover:not(:disabled) {
+    box-shadow: 0 0 12px rgba(0, 255, 255, 0.8);
+  }
+}
+
+.ghost {
+  background: $hud-cyan-soft;
+  color: $hud-cyan;
+
+  &:hover:not(:disabled) {
+    background: $hud-cyan;
+    color: $bg-deep;
+    box-shadow: $glow-cyan;
+  }
+}
+
+.danger {
+  border-color: $alert;
+  background: $alert-soft;
+  color: $alert;
+
+  &:hover:not(:disabled) {
+    background: $alert;
+    color: $text;
+    box-shadow: $glow-alert;
+  }
+}

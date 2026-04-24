@@ -1,0 +1,48 @@
+// HUD / Sci-Fi FUI palette · 根據 UI UX Pro Max skill 推薦
+
+// 背景
+$bg-deep: #030714;
+$bg-panel: rgba(6, 14, 28, 0.85);
+$bg-elevated: rgba(10, 20, 40, 0.6);
+
+// 主色（霓虹青）
+$hud-cyan: #00ffff;
+$hud-cyan-soft: rgba(0, 255, 255, 0.12);
+$hud-cyan-line: rgba(0, 255, 255, 0.35);
+$hud-cyan-dim: rgba(0, 255, 255, 0.65);
+
+// 副色（全像藍）
+$hud-blue: #0080ff;
+$hud-blue-soft: rgba(0, 128, 255, 0.15);
+
+// 狀態色
+$alert: #ff3b3b;
+$alert-soft: rgba(255, 59, 59, 0.15);
+$success: #00ff88;
+$warning: #ffb020;
+
+// 文字
+$text: #e5f4ff;
+$text-muted: #7a9cb8;
+$text-dim: #4a6b85;
+
+// 字體
+$font-display: 'Orbitron', 'Noto Sans TC', sans-serif;
+$font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+$font-sans: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+// 發光效果
+$glow-cyan: 0 0 6px rgba(0, 255, 255, 0.6), 0 0 16px rgba(0, 255, 255, 0.15);
+$glow-alert: 0 0 8px rgba(255, 59, 59, 0.7);
+$glow-success: 0 0 6px rgba(0, 255, 136, 0.6);
+$glow-warning: 0 0 6px rgba(255, 176, 32, 0.6);
+
+// 間距 & 尺寸
+$line: 1px;
+$radius: 0; // HUD 風格偏向直角
+$radius-chip: 2px;
+
+// 斷點
+$bp-mobile: 640px;
+$bp-tablet: 900px;
+$bp-desktop: 1200px;

@@ -1,0 +1,54 @@
+{
+  "brand": {
+    "kicker": "WHITEOUT · SURVIVAL",
+    "title": "王城指揮系統",
+    "subtitle": "KING · CITY · COMMAND · COORDINATION",
+    "desc": "輸入 8 位數 PIN 碼進入作戰房間。所有車頭與指揮官使用同一組 PIN 即加入同一房間。"
+  },
+  "clock": {
+    "utc_label": "UTC · UNIVERSAL COORDINATED TIME",
+    "sync": "SYNC"
+  },
+  "entry": {
+    "pin_label": "ACCESS · PIN",
+    "random": "隨機產生",
+    "enter_room": "進入作戰房間",
+    "hint": "指揮官建立房間後將 PIN 同步至車頭 (Discord / LINE)",
+    "pin_invalid": "PIN 必須為 8 位數字"
+  },
+  "lang": {
+    "zh": "繁中",
+    "en": "EN"
+  },
+  "room": {
+    "commander": "指揮官",
+    "drivers_online": "車頭 {{count}} / 在線 {{online}}",
+    "share_pin": "分享 PIN",
+    "leave": "離開",
+    "target_landing": "TARGET · 落地時間",
+    "t_minus": "T-MINUS · 落地倒數",
+    "all_land_sim": "ALL RALLIES LAND SIMULTANEOUSLY",
+    "objective": "OBJECTIVE · 目標",
+    "lock_and_start": "鎖定時間 · 開始作戰",
+    "driver_list": "車頭名單",
+    "col_driver": "車頭",
+    "col_march": "行軍",
+    "col_launch": "發車 · UTC",
+    "col_until_launch": "距發車",
+    "col_status": "狀態",
+    "role_suicide": "SUICIDE",
+    "status_ready": "READY",
+    "status_adjusting": "ADJUSTING",
+    "status_offline": "OFFLINE",
+    "new_driver": "NEW DRIVER · 車頭名稱",
+    "add": "加入",
+    "clear": "清空",
+    "export": "匯出",
+    "suicide_check": "首發車 (SUICIDE)"
+  },
+  "error": {
+    "room_not_found": "房間不存在或已過期",
+    "connection_lost": "連線中斷",
+    "firebase_missing": "Firebase 設定缺失"
+  }
+}

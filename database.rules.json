@@ -1,0 +1,69 @@
+{
+  "rules": {
+    "rooms": {
+      "$pin": {
+        ".read": "auth != null && $pin.matches(/^[0-9]{8}$/)",
+        ".write": "auth != null && $pin.matches(/^[0-9]{8}$/)",
+
+        "meta": {
+          ".validate": "newData.hasChildren(['createdAt', 'commanderId'])",
+
+          "createdAt": {
+            ".validate": "newData.isNumber()"
+          },
+          "commanderId": {
+            ".validate": "newData.isString() && newData.val().length <= 64"
+          },
+          "targetLandingAt": {
+            ".validate": "newData.isNumber() || newData.val() == null"
+          },
+          "locked": {
+            ".validate": "newData.isBoolean() || newData.val() == null"
+          },
+          "targetLabel": {
+            ".validate": "newData.isString() && newData.val().length <= 40 || newData.val() == null"
+          },
+          "targetX": {
+            ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 9999 || newData.val() == null"
+          },
+          "targetY": {
+            ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 9999 || newData.val() == null"
+          },
+          "lastActivityAt": {
+            ".validate": "newData.isNumber()"
+          },
+          "$other": { ".validate": false }
+        },
+
+        "members": {
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid",
+            ".validate": "newData.hasChildren(['name']) || !newData.exists()",
+
+            "name": {
+              ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 20"
+            },
+            "role": {
+              ".validate": "newData.val() == 'commander' || newData.val() == 'driver' || newData.val() == null"
+            },
+            "isSuicide": {
+              ".validate": "newData.isBoolean() || newData.val() == null"
+            },
+            "marchSeconds": {
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 600 || newData.val() == null"
+            },
+            "status": {
+              ".validate": "newData.val() == 'ready' || newData.val() == 'adjusting' || newData.val() == 'offline' || newData.val() == null"
+            },
+            "lastSeen": {
+              ".validate": "newData.isNumber() || newData.val() == null"
+            },
+            "$other": { ".validate": false }
+          }
+        },
+
+        "$other": { ".validate": false }
+      }
+    }
+  }
+}

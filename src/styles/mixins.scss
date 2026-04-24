@@ -1,0 +1,102 @@
+@use './variables.scss' as *;
+
+// HUD 通用 mixin
+
+// 面板四角裝飾 bracket
+@mixin hud-corners($color: $hud-cyan, $size: 18px, $width: 2px) {
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    width: $size;
+    height: $size;
+    border-color: $color;
+    border-style: solid;
+    pointer-events: none;
+  }
+  &::before {
+    top: -1px;
+    left: -1px;
+    border-width: $width 0 0 $width;
+  }
+  &::after {
+    bottom: -1px;
+    right: -1px;
+    border-width: 0 $width $width 0;
+  }
+}
+
+// Scanline overlay 掃描線
+@mixin scanlines($opacity: 0.025) {
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 2px,
+    rgba(0, 255, 255, $opacity) 3px,
+    transparent 4px
+  );
+}
+
+// 裁切六角形按鈕
+@mixin chamfered($size: 6px) {
+  clip-path: polygon(
+    $size 0,
+    100% 0,
+    100% calc(100% - #{$size}),
+    calc(100% - #{$size}) 100%,
+    0 100%,
+    0 $size
+  );
+}
+
+// Mono 數字（等寬、tabular）
+@mixin mono-nums {
+  font-family: $font-mono;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+// Section title · 小標題「■ TITLE ──────」
+@mixin section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: $font-display;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  color: $hud-cyan-dim;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+
+  &::before {
+    content: '■';
+    color: $hud-cyan;
+    font-size: 7px;
+  }
+  &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, $hud-cyan-line, transparent);
+  }
+}
+
+// 響應式 media queries
+@mixin mobile {
+  @media (max-width: #{$bp-mobile}) {
+    @content;
+  }
+}
+@mixin tablet-down {
+  @media (max-width: #{$bp-tablet}) {
+    @content;
+  }
+}
+
+// 降動畫模式
+@mixin reduced-motion {
+  @media (prefers-reduced-motion: reduce) {
+    @content;
+  }
+}
