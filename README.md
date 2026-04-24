@@ -27,4 +27,3 @@ npm run dev
 
 MIT © [OHHANNN](https://github.com/OHHANNN)
 靈感來源：[Rally Timing Master](https://github.com/mountarreat/wos-rally-timing-master)、[Theria Games Rally Tracker](https://theriagames.com/guide/whiteout-survival-rally-tracker/)
-UI 設計系統由 [UI UX Pro Max Skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) 推薦的 HUD / Sci-Fi FUI 風格生成
