@@ -1,0 +1,266 @@
+import { useEffect, useRef, useState } from 'react';
+import {
+  get,
+  onDisconnect,
+  onValue,
+  ref,
+  serverTimestamp,
+  set,
+  update,
+} from 'firebase/database';
+
+import { database } from '@/lib/firebase';
+import { logError, logInfo } from '@/lib/logger';
+
+import type { Member, MemberStatus, RoomMeta } from '@/types/room';
+
+interface UseRoomState {
+  loading: boolean;
+  exists: boolean;
+  isCommander: boolean;
+  meta: RoomMeta | null;
+  members: Record<string, Member>;
+  error: Error | null;
+}
+
+interface UseRoomActions {
+  updateMeta: (patch: Partial<RoomMeta>) => Promise<void>;
+  updateMyMember: (patch: Partial<Member>) => Promise<void>;
+  /** 指揮官專用：編輯任意車頭。非指揮官呼叫會被 security rules 擋下。 */
+  updateMember: (targetUid: string, patch: Partial<Member>) => Promise<void>;
+  removeMember: (uid: string) => Promise<void>;
+  leaveRoom: () => Promise<void>;
+}
+
+const initialState: UseRoomState = {
+  loading: true,
+  exists: false,
+  isCommander: false,
+  meta: null,
+  members: {},
+  error: null,
+};
+
+/**
+ * 核心 hook：進入房間 / 建立房間 / 訂閱即時資料 / 處理離線狀態。
+ *
+ * - pin: 8 位數字 PIN
+ * - uid: 當前使用者 uid（來自 useAuth）
+ * - name: 使用者名稱（若為空字串則先不 join，等使用者設好名字）
+ */
+export function useRoom(
+  pin: string | undefined,
+  uid: string | undefined,
+  name: string
+): UseRoomState & UseRoomActions {
+  const [state, setState] = useState<UseRoomState>(initialState);
+  const joinedRef = useRef(false);
+
+  // ---------- 訂閱 room ----------
+  useEffect(() => {
+    if (!pin || !uid) return;
+
+    const roomRef = ref(database, `rooms/${pin}`);
+    const unsub = onValue(
+      roomRef,
+      (snap) => {
+        const data = snap.val() as {
+          meta?: RoomMeta;
+          members?: Record<string, Member>;
+        } | null;
+
+        if (!data || !data.meta) {
+          setState({
+            loading: false,
+            exists: false,
+            isCommander: false,
+            meta: null,
+            members: {},
+            error: null,
+          });
+          return;
+        }
+
+        setState({
+          loading: false,
+          exists: true,
+          isCommander: data.meta.commanderId === uid,
+          meta: data.meta,
+          members: data.members ?? {},
+          error: null,
+        });
+      },
+      (err) => {
+        logError('useRoom · onValue error', err);
+        setState((s) => ({ ...s, loading: false, error: err }));
+      }
+    );
+
+    return () => unsub();
+  }, [pin, uid]);
+
+  // ---------- 建立房間 or 加入現有房間 ----------
+  useEffect(() => {
+    if (!pin || !uid || !name || state.loading || joinedRef.current) return;
+
+    (async () => {
+      try {
+        const metaRef = ref(database, `rooms/${pin}/meta`);
+        const metaSnap = await get(metaRef);
+
+        // 房間不存在 → 建立（自己成為 commander）
+        if (!metaSnap.exists()) {
+          const now = Date.now();
+          const meta: RoomMeta = {
+            createdAt: now,
+            commanderId: uid,
+            targetLandingAt: null,
+            locked: false,
+            targetLabel: null,
+            targetX: null,
+            targetY: null,
+            lastActivityAt: now,
+          };
+          const member: Member = {
+            name,
+            role: 'commander',
+            isSuicide: false,
+            marchSeconds: 60,
+            status: 'ready',
+            lastSeen: now,
+            rallying: true,
+          };
+          await set(ref(database, `rooms/${pin}`), {
+            meta,
+            members: { [uid]: member },
+          });
+          logInfo('useRoom · created', pin);
+        } else {
+          // 房間存在 → 以 driver 加入（或更新自己 name）
+          const myRef = ref(database, `rooms/${pin}/members/${uid}`);
+          const mySnap = await get(myRef);
+          const existingMember = mySnap.val() as Member | null;
+
+          const now = Date.now();
+          const member: Member = {
+            name,
+            role:
+              (metaSnap.val() as RoomMeta).commanderId === uid
+                ? 'commander'
+                : (existingMember?.role ?? 'driver'),
+            isSuicide: existingMember?.isSuicide ?? false,
+            marchSeconds: existingMember?.marchSeconds ?? 60,
+            status: 'ready',
+            lastSeen: now,
+            rallying: existingMember?.rallying ?? true,
+          };
+          await set(myRef, member);
+          logInfo('useRoom · joined', pin);
+        }
+
+        joinedRef.current = true;
+
+        // presence：斷線時自動標 offline
+        const myRef = ref(database, `rooms/${pin}/members/${uid}`);
+        onDisconnect(myRef).update({
+          status: 'offline' satisfies MemberStatus,
+          lastSeen: serverTimestamp(),
+        });
+
+        // lastActivityAt 用 serverTimestamp
+        await update(ref(database, `rooms/${pin}/meta`), {
+          lastActivityAt: serverTimestamp(),
+        });
+      } catch (err) {
+        logError('useRoom · join/create failed', err);
+        setState((s) => ({
+          ...s,
+          error: err instanceof Error ? err : new Error(String(err)),
+        }));
+      }
+    })();
+    // state.loading intentionally included: 等訂閱抓到資料再決定建/加入
+  }, [pin, uid, name, state.loading]);
+
+  // ---------- cleanup：離頁時標自己 offline + 取消 onDisconnect ----------
+  useEffect(() => {
+    return () => {
+      if (!pin || !uid || !joinedRef.current) return;
+      const myRef = ref(database, `rooms/${pin}/members/${uid}`);
+      onDisconnect(myRef).cancel();
+      update(myRef, { status: 'offline', lastSeen: Date.now() }).catch(() => {
+        /* noop */
+      });
+    };
+  }, [pin, uid]);
+
+  // ---------- actions ----------
+  const updateMeta = async (patch: Partial<RoomMeta>) => {
+    if (!pin) return;
+    try {
+      await update(ref(database, `rooms/${pin}/meta`), {
+        ...patch,
+        lastActivityAt: serverTimestamp(),
+      });
+    } catch (err) {
+      logError('useRoom · updateMeta rejected', err, patch);
+      throw err;
+    }
+  };
+
+  const updateMyMember = async (patch: Partial<Member>) => {
+    if (!pin || !uid) return;
+    try {
+      await update(ref(database, `rooms/${pin}/members/${uid}`), {
+        ...patch,
+        lastSeen: Date.now(),
+      });
+    } catch (err) {
+      logError('useRoom · updateMyMember rejected', err, patch);
+      throw err;
+    }
+  };
+
+  const updateMember = async (targetUid: string, patch: Partial<Member>) => {
+    if (!pin) return;
+    try {
+      // 指揮官代改他人資料，不 overwrite lastSeen（那是車頭自己的 presence 指標）
+      await update(ref(database, `rooms/${pin}/members/${targetUid}`), patch);
+    } catch (err) {
+      logError('useRoom · updateMember rejected', err, { targetUid, patch });
+      throw err;
+    }
+  };
+
+  const removeMember = async (targetUid: string) => {
+    if (!pin) return;
+    try {
+      await set(ref(database, `rooms/${pin}/members/${targetUid}`), null);
+    } catch (err) {
+      logError('useRoom · removeMember rejected', err);
+      throw err;
+    }
+  };
+
+  const leaveRoom = async () => {
+    if (!pin || !uid) return;
+    try {
+      const myRef = ref(database, `rooms/${pin}/members/${uid}`);
+      onDisconnect(myRef).cancel();
+      await set(myRef, null);
+      joinedRef.current = false;
+    } catch (err) {
+      logError('useRoom · leaveRoom rejected', err);
+      throw err;
+    }
+  };
+
+  return {
+    ...state,
+    updateMeta,
+    updateMyMember,
+    updateMember,
+    removeMember,
+    leaveRoom,
+  };
+}

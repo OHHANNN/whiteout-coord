@@ -1,0 +1,307 @@
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: $font-mono;
+  font-size: 12px;
+
+  th {
+    text-align: left;
+    padding: 10px 12px;
+    font-family: $font-display;
+    font-size: 10px;
+    font-weight: 700;
+    color: $hud-cyan-dim;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    border-bottom: 1px solid $hud-cyan-line;
+  }
+
+  td {
+    padding: 12px;
+    border-bottom: 1px solid rgba(0, 255, 255, 0.08);
+    color: $text-muted;
+    @include mono-nums;
+    vertical-align: middle;
+  }
+
+  tr:hover td {
+    background: rgba(0, 255, 255, 0.04);
+  }
+}
+
+.self {
+  td {
+    background: linear-gradient(90deg, rgba(255, 59, 59, 0.08), transparent 60%);
+  }
+}
+
+.name {
+  color: $text;
+  font-family: $font-sans;
+  font-weight: 500;
+}
+
+.chip,
+.suicide {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  font-family: $font-mono;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  border: 1px solid $hud-cyan-line;
+  color: $hud-cyan;
+}
+
+.suicide {
+  border-color: $alert;
+  color: $alert;
+  text-shadow: $glow-alert;
+}
+
+.mono {
+  @include mono-nums;
+}
+
+.launch {
+  color: $hud-cyan;
+  text-shadow: $glow-cyan;
+  font-weight: 500;
+}
+
+.warning {
+  color: $warning;
+  text-shadow: $glow-warning;
+}
+
+.danger {
+  color: $alert;
+  text-shadow: $glow-alert;
+  animation: cellFlicker 1s infinite;
+}
+
+.launched {
+  color: $success;
+  text-shadow: $glow-success;
+}
+
+@keyframes cellFlicker {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.marchEdit {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.marchInput {
+  width: 66px;
+  height: 26px;
+  padding: 0 4px;
+  background: $bg-elevated;
+  border: 1px solid $hud-cyan-line;
+  font-family: $font-mono;
+  font-size: 13px;
+  color: $hud-cyan;
+  text-align: center;
+  outline: none;
+
+  &:focus {
+    border-color: $hud-cyan;
+    box-shadow: 0 0 0 1px $hud-cyan;
+  }
+
+  &::placeholder {
+    color: $text-dim;
+  }
+}
+
+.miniBtn {
+  width: 22px;
+  height: 22px;
+  border: 1px solid $hud-cyan-line;
+  color: $hud-cyan;
+  background: transparent;
+  cursor: pointer;
+  font-family: $font-mono;
+  font-size: 14px;
+  line-height: 1;
+
+  &:hover {
+    background: $hud-cyan-soft;
+    border-color: $hud-cyan;
+  }
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.ready {
+  color: $success;
+  .dot {
+    background: $success;
+    box-shadow: $glow-success;
+  }
+}
+.adjusting {
+  color: $warning;
+  .dot {
+    background: $warning;
+    box-shadow: $glow-warning;
+    animation: cellFlicker 1s infinite;
+  }
+}
+.offline {
+  color: $text-dim;
+  .dot {
+    background: $text-dim;
+  }
+}
+
+.removeBtn {
+  margin-left: 10px;
+  width: 22px;
+  height: 22px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: $text-dim;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+
+  &:hover {
+    color: $alert;
+    border-color: $alert;
+  }
+}
+
+.empty {
+  text-align: center;
+  color: $text-dim;
+  padding: 32px;
+  font-family: $font-mono;
+}
+
+// Mobile: 折成 compact card
+@include tablet-down {
+  .table {
+    display: block;
+
+    thead {
+      display: none;
+    }
+
+    tbody,
+    tr {
+      display: block;
+      width: 100%;
+    }
+
+    tr {
+      border: 1px solid $hud-cyan-line;
+      margin-bottom: 8px;
+      padding: 10px 12px;
+      background: rgba(0, 255, 255, 0.015);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      column-gap: 10px;
+      row-gap: 6px;
+    }
+    tr.self {
+      background: linear-gradient(
+        180deg,
+        rgba(255, 59, 59, 0.06),
+        rgba(0, 255, 255, 0.02)
+      );
+    }
+
+    // 車頭名稱：橫跨整行、底部分隔線
+    td:first-child {
+      grid-column: 1 / -1;
+      border-bottom: 1px solid rgba(0, 255, 255, 0.12);
+      padding: 2px 0 8px;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+
+      &::before {
+        display: none;
+      }
+    }
+
+    // 其他欄：label 在上、值在下
+    td {
+      padding: 2px 0;
+      border: none;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 2px;
+      min-height: 38px;
+
+      &::before {
+        content: attr(data-label);
+        color: $text-dim;
+        font-size: 9px;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        font-family: $font-mono;
+      }
+    }
+
+    // 狀態欄跨兩格（比較寬可放 remove 按鈕）
+    td:last-child {
+      grid-column: 1 / -1;
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid rgba(0, 255, 255, 0.08);
+      padding-top: 8px;
+      margin-top: 2px;
+      min-height: auto;
+
+      &::before {
+        font-size: 10px;
+      }
+    }
+
+    // 行軍編輯在手機上要大一點方便戳
+    .marchInput {
+      width: 72px;
+      height: 32px;
+      font-size: 14px;
+    }
+    .miniBtn {
+      width: 32px;
+      height: 32px;
+      font-size: 18px;
+    }
+    .marchEdit {
+      gap: 6px;
+    }
+
+    // launch / until 用較大的 mono 字體（資料才是重點）
+    .launch,
+    .mono {
+      font-size: 14px;
+    }
+  }
+}

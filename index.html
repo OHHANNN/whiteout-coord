@@ -13,6 +13,26 @@
       rel="stylesheet"
     />
     <title>王城指揮作戰系統 · Whiteout Coord</title>
+    <script>
+      // SPA 404 redirect decoder · 必須在 React 掛載前執行
+      // 搭配 public/404.html 運作，讓 GitHub Pages 支援直接連結 /room/:pin
+      (function (l) {
+        if (l.search[1] === '/') {
+          var decoded = l.search
+            .slice(1)
+            .split('&')
+            .map(function (s) {
+              return s.replace(/~and~/g, '&');
+            })
+            .join('?');
+          window.history.replaceState(
+            null,
+            '',
+            l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      })(window.location);
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -44,7 +44,12 @@
     "add": "Add",
     "clear": "Clear",
     "export": "Export",
-    "suicide_check": "Suicide (first)"
+    "suicide_check": "Suicide (first)",
+    "rallying_check": "I'm rallying too",
+    "rallying_hint": "(Off = coordinator only, hidden from list)",
+    "coordinator_only": "COORDINATOR ONLY",
+    "copied": "Link copied to clipboard",
+    "copy_failed": "Copy failed, please copy URL manually"
   },
   "error": {
     "room_not_found": "Room not found or expired",

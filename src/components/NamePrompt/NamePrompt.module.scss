@@ -1,0 +1,51 @@
+.wrap {
+  max-width: 480px;
+  margin: 80px auto;
+  padding: 0 16px;
+  position: relative;
+  z-index: 1;
+}
+
+.inner {
+  padding: 48px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+}
+
+.title {
+  font-family: $font-display;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: $text;
+  text-shadow: $glow-cyan;
+}
+
+.sub {
+  font-family: $font-mono;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  color: $hud-cyan-dim;
+  margin-bottom: 12px;
+}
+
+.input {
+  width: 100%;
+  max-width: 320px;
+  height: 44px;
+  padding: 0 14px;
+  background: $bg-elevated;
+  border: 1px solid $hud-cyan-line;
+  font-family: $font-mono;
+  font-size: 16px;
+  color: $hud-cyan;
+  text-align: center;
+  outline: none;
+
+  &:focus {
+    border-color: $hud-cyan;
+    box-shadow: 0 0 0 1px $hud-cyan, 0 0 10px rgba(0, 255, 255, 0.3);
+  }
+}

@@ -1,0 +1,159 @@
+.panel {
+  border-right: 1px solid $hud-cyan-line;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+
+  @include tablet-down {
+    border-right: none;
+    border-bottom: 1px solid $hud-cyan-line;
+  }
+}
+
+.title {
+  @include section-title;
+}
+
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.timeInputRow {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+}
+
+.timeInput {
+  height: 44px;
+  padding: 0 12px;
+  background: $bg-elevated;
+  border: 1px solid $hud-cyan-line;
+  font-family: $font-mono;
+  font-size: 16px;
+  font-weight: 500;
+  color: $hud-cyan;
+  text-align: center;
+  letter-spacing: 0.05em;
+  flex: 1;
+  min-width: 0;
+
+  &:focus {
+    border-color: $hud-cyan;
+    box-shadow: 0 0 0 1px $hud-cyan, 0 0 10px rgba(0, 255, 255, 0.3);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.clearBtn {
+  width: 44px;
+  height: 44px;
+  border: 1px solid $hud-cyan-line;
+  background: transparent;
+  color: $text-dim;
+  font-size: 18px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+
+  &:hover {
+    color: $alert;
+    border-color: $alert;
+    background: $alert-soft;
+  }
+}
+
+.targetInfo {
+  text-align: center;
+  margin-top: 6px;
+  font-family: $font-mono;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: $hud-cyan-dim;
+  text-shadow: $glow-cyan;
+}
+
+.nextDay {
+  color: $warning;
+  text-shadow: $glow-warning;
+  font-size: 10px;
+  margin-left: 4px;
+}
+
+.input {
+  width: 100%;
+  height: 36px;
+  padding: 0 12px;
+  background: $bg-elevated;
+  border: 1px solid $hud-cyan-line;
+  font-family: $font-mono;
+  font-size: 13px;
+  color: $hud-cyan;
+  outline: none;
+
+  &:focus {
+    border-color: $hud-cyan;
+    box-shadow: 0 0 0 1px $hud-cyan, 0 0 10px rgba(0, 255, 255, 0.3);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &::placeholder {
+    color: $text-dim;
+  }
+}
+
+.btnRow {
+  display: flex;
+  gap: 4px;
+}
+
+.chip {
+  flex: 1;
+  height: 28px;
+  border: 1px solid $hud-cyan-line;
+  background: transparent;
+  font-family: $font-mono;
+  font-size: 11px;
+  color: $hud-cyan-dim;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+
+  &:hover:not(:disabled) {
+    border-color: $hud-cyan;
+    color: $hud-cyan;
+    background: $hud-cyan-soft;
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+.coordRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 8px;
+
+  .input {
+    min-width: 0;
+    width: 100%;
+    text-align: center;
+  }
+}
+
+.footer {
+  margin-top: auto;
+  padding-top: 8px;
+}

@@ -5,6 +5,8 @@ node_modules/
 
 # build
 dist/
+dist2/
+dist-*/
 dist-ssr/
 *.local
 

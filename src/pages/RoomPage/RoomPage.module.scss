@@ -1,59 +1,210 @@
 .page {
   position: relative;
   z-index: 1;
-  max-width: 1200px;
+  max-width: 1280px;
   margin: 0 auto;
-  padding: 48px 24px 80px;
+  padding: 40px 16px 80px;
 
-  @include mobile {
-    padding: 16px 12px 48px;
+  @include tablet-down {
+    padding: 16px 8px 40px;
   }
 }
 
-.inner {
+.loadingWrap {
+  min-height: 70vh;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 32px;
-  padding: 56px 40px;
+  justify-content: center;
 }
 
-.placeholder {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  text-align: center;
-  color: $text-muted;
-}
-
-.pin {
-  @include mono-nums;
-  font-size: 40px;
-  font-weight: 500;
-  color: $hud-cyan;
+.loadingText {
+  font-family: $font-display;
+  font-size: 14px;
+  letter-spacing: 0.3em;
+  color: $hud-cyan-dim;
   text-shadow: $glow-cyan;
-  letter-spacing: 0.1em;
-  padding: 12px 0;
+  animation: pulse 1.8s ease-in-out infinite;
 }
 
-.note {
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+// Header
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid $hud-cyan-line;
+  background: linear-gradient(180deg, $hud-cyan-soft, transparent);
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.headLeft {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.headRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pinBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px;
+  border: 1px solid $hud-cyan;
+  background: $hud-cyan-soft;
+  font-family: $font-mono;
+  font-size: 13px;
+  font-weight: 700;
+  color: $hud-cyan;
+  letter-spacing: 0.15em;
+  text-shadow: $glow-cyan;
+}
+
+.liveDot {
+  width: 8px;
+  height: 8px;
+  background: $success;
+  border-radius: 50%;
+  box-shadow: $glow-success;
+  animation: liveDot 1.6s ease-in-out infinite;
+
+  @include reduced-motion {
+    animation: none;
+  }
+}
+
+@keyframes liveDot {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(0.85);
+  }
+}
+
+.meta {
+  display: flex;
+  gap: 16px;
+  font-family: $font-mono;
+  font-size: 11px;
+  color: $text-muted;
+  flex-wrap: wrap;
+
+  b {
+    color: $hud-cyan;
+    font-weight: 500;
+  }
+}
+
+.locked {
+  color: $warning;
+  text-shadow: $glow-warning;
+}
+
+// Body
+.body {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  min-height: 560px;
+
+  @include tablet-down {
+    grid-template-columns: 1fr;
+  }
+}
+
+.main {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.title {
+  font-family: $font-display;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: $text;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.sub {
+  font-family: $font-mono;
+  color: $text-muted;
+  font-size: 11px;
+  font-weight: 400;
+  margin-left: 10px;
+  letter-spacing: 0.1em;
+}
+
+.myActions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: $font-mono;
+  font-size: 11px;
+  color: $text-muted;
+  cursor: pointer;
+
+  input {
+    accent-color: $hud-cyan;
+  }
+}
+
+.lockedBanner {
+  padding: 12px;
+  text-align: center;
+  border: 1px dashed $warning;
+  color: $warning;
   font-family: $font-mono;
   font-size: 12px;
-  color: $text-dim;
-  max-width: 360px;
-  line-height: 1.7;
+  letter-spacing: 0.1em;
+  background: rgba(255, 176, 32, 0.05);
 }
 
-.back {
-  margin-top: 16px;
+.coordinatorBanner {
+  padding: 10px 14px;
+  border: 1px dashed $hud-cyan-line;
+  color: $hud-cyan-dim;
+  background: $hud-cyan-soft;
   font-family: $font-mono;
-  color: $hud-cyan;
-  text-decoration: none;
-  padding: 6px 14px;
-  border: 1px solid $hud-cyan-line;
-
-  &:hover {
-    background: $hud-cyan-soft;
-  }
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-align: center;
 }

@@ -1,0 +1,109 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 22px 16px;
+  border: 1px solid $hud-cyan;
+  background:
+    radial-gradient(ellipse at center, $hud-cyan-soft, transparent 70%),
+    $bg-elevated;
+  position: relative;
+  overflow: hidden;
+
+  // Scan line animation
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: $hud-cyan;
+    box-shadow: $glow-cyan;
+    animation: scan 3s linear infinite;
+  }
+  @include reduced-motion {
+    &::before {
+      animation: none;
+    }
+  }
+}
+
+@keyframes scan {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(82px);
+  }
+}
+
+.value {
+  @include mono-nums;
+  font-weight: 500;
+  color: $hud-cyan;
+  text-shadow: $glow-cyan;
+  line-height: 1;
+}
+
+.label {
+  font-family: $font-mono;
+  font-size: 10px;
+  letter-spacing: 0.25em;
+  color: $text-muted;
+  text-transform: uppercase;
+  margin-top: 4px;
+  text-align: center;
+}
+
+.md .value {
+  font-size: 36px;
+}
+.lg .value {
+  font-size: 44px;
+}
+.xl .value {
+  font-size: 56px;
+}
+
+.warning {
+  border-color: $warning;
+  .value {
+    color: $warning;
+    text-shadow: $glow-warning;
+  }
+}
+
+.danger {
+  border-color: $alert;
+  .value {
+    color: $alert;
+    text-shadow: $glow-alert;
+    animation: flicker 1s ease-in-out infinite;
+  }
+  @include reduced-motion {
+    .value {
+      animation: none;
+    }
+  }
+}
+
+@keyframes flicker {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.landed {
+  border-color: $success;
+  .value {
+    color: $success;
+    text-shadow: $glow-success;
+    font-size: 20px;
+  }
+}

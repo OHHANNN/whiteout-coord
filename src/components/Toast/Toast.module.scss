@@ -1,0 +1,60 @@
+.toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  padding: 12px 18px;
+  background: $bg-panel;
+  border: 1px solid $hud-cyan;
+  backdrop-filter: blur(8px);
+  font-family: $font-mono;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  color: $hud-cyan;
+  text-shadow: $glow-cyan;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6), 0 0 12px rgba(0, 255, 255, 0.25);
+  animation: slideIn 0.25s ease-out;
+  max-width: min(90vw, 400px);
+
+  @include reduced-motion {
+    animation: none;
+  }
+
+  @include mobile {
+    top: 12px;
+    right: 12px;
+    left: 12px;
+    right: 12px;
+    max-width: calc(100vw - 24px);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-8px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.success {
+  border-color: $success;
+  color: $success;
+  text-shadow: $glow-success;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6), 0 0 12px rgba(0, 255, 136, 0.3);
+}
+
+.error {
+  border-color: $alert;
+  color: $alert;
+  text-shadow: $glow-alert;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6), 0 0 12px rgba(255, 59, 59, 0.3);
+}
+
+.info {
+  border-color: $hud-cyan;
+  color: $hud-cyan;
+}

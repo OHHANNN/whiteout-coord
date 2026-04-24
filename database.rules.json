@@ -37,7 +37,7 @@
 
         "members": {
           "$uid": {
-            ".write": "auth != null && auth.uid === $uid",
+            ".write": "auth != null && (auth.uid === $uid || root.child('rooms').child($pin).child('meta').child('commanderId').val() === auth.uid)",
             ".validate": "newData.hasChildren(['name']) || !newData.exists()",
 
             "name": {
@@ -57,6 +57,9 @@
             },
             "lastSeen": {
               ".validate": "newData.isNumber() || newData.val() == null"
+            },
+            "rallying": {
+              ".validate": "newData.isBoolean() || newData.val() == null"
             },
             "$other": { ".validate": false }
           }

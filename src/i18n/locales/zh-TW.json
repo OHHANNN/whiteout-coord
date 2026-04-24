@@ -44,7 +44,12 @@
     "add": "加入",
     "clear": "清空",
     "export": "匯出",
-    "suicide_check": "首發車 (SUICIDE)"
+    "suicide_check": "首發車 (SUICIDE)",
+    "rallying_check": "我也出集結",
+    "rallying_hint": "（關閉後你不出現在車頭名單，只當調度員）",
+    "coordinator_only": "COORDINATOR ONLY",
+    "copied": "連結已複製到剪貼簿",
+    "copy_failed": "無法複製，請手動複製網址"
   },
   "error": {
     "room_not_found": "房間不存在或已過期",
