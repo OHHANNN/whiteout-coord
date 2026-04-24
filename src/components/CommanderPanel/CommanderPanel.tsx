@@ -164,9 +164,11 @@ export function CommanderPanel({ meta, canEdit, onUpdate }: CommanderPanelProps)
             @ {formatUtcTime(meta.targetLandingAt)} UTC
             {meta.targetLandingAt - now > 24 * 3600 * 1000 && (
               <span className={styles.nextDay}>
-                {' '}
-                · {Math.floor((meta.targetLandingAt - now) / (24 * 3600 * 1000)) + 1}{' '}
-                天後
+                {' · '}
+                {t('room.days_after', {
+                  days:
+                    Math.floor((meta.targetLandingAt - now) / (24 * 3600 * 1000)) + 1,
+                })}
               </span>
             )}
           </div>
@@ -211,7 +213,7 @@ export function CommanderPanel({ meta, canEdit, onUpdate }: CommanderPanelProps)
             block
             onClick={() => onUpdate({ locked: !meta.locked })}
           >
-            {meta.locked ? '解除鎖定' : `▶ ${t('room.lock_and_start')}`}
+            {meta.locked ? t('room.unlock') : `▶ ${t('room.lock_and_start')}`}
           </Button>
         </div>
       )}

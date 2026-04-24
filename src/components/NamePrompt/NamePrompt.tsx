@@ -27,14 +27,14 @@ export function NamePrompt({ initialName = '', onSubmit, pin }: NamePromptProps)
     <div className={styles.wrap}>
       <Panel label="IDENTIFY" labelRight={`PIN · ${pin}`}>
         <div className={styles.inner}>
-          <div className={styles.title}>輸入你的車頭名稱</div>
-          <div className={styles.sub}>ENTER YOUR CALLSIGN</div>
+          <div className={styles.title}>{t('entry.enter_name_title')}</div>
+          <div className={styles.sub}>{t('entry.enter_name_sub')}</div>
 
           <input
             className={styles.input}
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="例如：CocoMelon"
+            placeholder={t('entry.name_placeholder')}
             maxLength={20}
             autoFocus
             onKeyDown={(e) => {

@@ -14,11 +14,15 @@
     "random": "隨機產生",
     "enter_room": "進入作戰房間",
     "hint": "指揮官建立房間後將 PIN 同步至車頭 (Discord / LINE)",
-    "pin_invalid": "PIN 必須為 8 位數字"
+    "pin_invalid": "PIN 必須為 8 位數字",
+    "enter_name_title": "輸入你的車頭名稱",
+    "enter_name_sub": "ENTER YOUR CALLSIGN",
+    "name_placeholder": "例如：CocoMelon"
   },
   "lang": {
     "zh": "繁中",
-    "en": "EN"
+    "en": "EN",
+    "ko": "KO"
   },
   "room": {
     "commander": "指揮官",
@@ -30,6 +34,7 @@
     "all_land_sim": "ALL RALLIES LAND SIMULTANEOUSLY",
     "objective": "OBJECTIVE · 目標",
     "lock_and_start": "鎖定時間 · 開始作戰",
+    "unlock": "解除鎖定",
     "driver_list": "車頭名單",
     "col_driver": "車頭",
     "col_march": "行軍",
@@ -48,6 +53,11 @@
     "rallying_check": "我也出集結",
     "rallying_hint": "（關閉後你不出現在車頭名單，只當調度員）",
     "coordinator_only": "COORDINATOR ONLY",
+    "coordinator_desc": "你只在調度，沒有加入車頭名單",
+    "locked_banner": "🔒 作戰已鎖定 · RALLY LOCKED — 指揮官解除後才能編輯",
+    "loading": "LOADING · 連線中",
+    "initializing": "INITIALIZING ROOM",
+    "days_after": "{{days}} 天後",
     "copied": "連結已複製到剪貼簿",
     "copy_failed": "無法複製，請手動複製網址"
   },

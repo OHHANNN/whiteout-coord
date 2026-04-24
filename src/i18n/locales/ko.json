@@ -1,0 +1,69 @@
+{
+  "brand": {
+    "kicker": "WHITEOUT · SURVIVAL",
+    "title": "왕성 지휘 시스템",
+    "subtitle": "KING · CITY · COMMAND · COORDINATION",
+    "desc": "8자리 PIN을 입력해 작전 방에 입장하세요. 지휘관과 집결 리더가 동일한 PIN을 사용하면 같은 방에 모입니다."
+  },
+  "clock": {
+    "utc_label": "UTC · UNIVERSAL COORDINATED TIME",
+    "sync": "SYNC"
+  },
+  "entry": {
+    "pin_label": "ACCESS · PIN",
+    "random": "랜덤 생성",
+    "enter_room": "작전 방 입장",
+    "hint": "지휘관이 방을 만든 후 PIN을 집결 리더들에게 공유하세요 (Discord / LINE)",
+    "pin_invalid": "PIN은 8자리 숫자여야 합니다",
+    "enter_name_title": "리더 이름을 입력하세요",
+    "enter_name_sub": "ENTER YOUR CALLSIGN",
+    "name_placeholder": "예: CocoMelon"
+  },
+  "lang": {
+    "zh": "繁中",
+    "en": "EN",
+    "ko": "KO"
+  },
+  "room": {
+    "commander": "지휘관",
+    "drivers_online": "집결 리더 {{count}} / 접속 {{online}}",
+    "share_pin": "PIN 공유",
+    "leave": "나가기",
+    "target_landing": "TARGET · 착지 시간",
+    "t_minus": "T-MINUS · 착지 카운트다운",
+    "all_land_sim": "ALL RALLIES LAND SIMULTANEOUSLY",
+    "objective": "OBJECTIVE · 목표",
+    "lock_and_start": "시간 잠금 · 작전 시작",
+    "unlock": "잠금 해제",
+    "driver_list": "집결 리더 목록",
+    "col_driver": "리더",
+    "col_march": "행군",
+    "col_launch": "출발 · UTC",
+    "col_until_launch": "출발까지",
+    "col_status": "상태",
+    "role_suicide": "SUICIDE",
+    "status_ready": "READY",
+    "status_adjusting": "ADJUSTING",
+    "status_offline": "OFFLINE",
+    "new_driver": "NEW DRIVER · 리더 이름",
+    "add": "추가",
+    "clear": "초기화",
+    "export": "내보내기",
+    "suicide_check": "선봉대 (SUICIDE)",
+    "rallying_check": "나도 집결에 참여",
+    "rallying_hint": "（끄면 리더 목록에 표시되지 않고 조율만 담당합니다）",
+    "coordinator_only": "COORDINATOR ONLY",
+    "coordinator_desc": "조율만 담당하며 리더 목록에 포함되지 않습니다",
+    "locked_banner": "🔒 작전이 잠겼습니다 · RALLY LOCKED — 지휘관이 해제해야 편집할 수 있습니다",
+    "loading": "LOADING · 연결 중",
+    "initializing": "INITIALIZING ROOM",
+    "days_after": "{{days}}일 후",
+    "copied": "링크가 클립보드에 복사되었습니다",
+    "copy_failed": "복사 실패, URL을 직접 복사해주세요"
+  },
+  "error": {
+    "room_not_found": "방이 존재하지 않거나 만료되었습니다",
+    "connection_lost": "연결이 끊어졌습니다",
+    "firebase_missing": "Firebase 설정이 누락되었습니다"
+  }
+}

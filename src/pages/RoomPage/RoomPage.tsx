@@ -91,7 +91,7 @@ export function RoomPage() {
   if (loading || !user) {
     return (
       <div className={styles.loadingWrap}>
-        <div className={styles.loadingText}>LOADING · 連線中</div>
+        <div className={styles.loadingText}>{t('room.loading')}</div>
       </div>
     );
   }
@@ -100,7 +100,7 @@ export function RoomPage() {
     // 這種情況罕見 — useRoom 會自動建立房間
     return (
       <div className={styles.loadingWrap}>
-        <div className={styles.loadingText}>INITIALIZING ROOM</div>
+        <div className={styles.loadingText}>{t('room.initializing')}</div>
       </div>
     );
   }
@@ -242,7 +242,7 @@ export function RoomPage() {
 
             {me?.rallying === false && (
               <div className={styles.coordinatorBanner}>
-                {t('room.coordinator_only')} · 你只在調度，沒有加入車頭名單
+                {t('room.coordinator_only')} · {t('room.coordinator_desc')}
               </div>
             )}
 
@@ -257,9 +257,7 @@ export function RoomPage() {
             />
 
             {meta.locked && (
-              <div className={styles.lockedBanner}>
-                🔒 作戰已鎖定 · RALLY LOCKED — 指揮官解除後才能編輯
-              </div>
+              <div className={styles.lockedBanner}>{t('room.locked_banner')}</div>
             )}
           </main>
         </div>

@@ -14,11 +14,15 @@
     "random": "Random",
     "enter_room": "Enter Room",
     "hint": "Share the PIN with your drivers via Discord / LINE after creating a room.",
-    "pin_invalid": "PIN must be 8 digits"
+    "pin_invalid": "PIN must be 8 digits",
+    "enter_name_title": "Enter your driver name",
+    "enter_name_sub": "ENTER YOUR CALLSIGN",
+    "name_placeholder": "e.g., CocoMelon"
   },
   "lang": {
     "zh": "繁中",
-    "en": "EN"
+    "en": "EN",
+    "ko": "KO"
   },
   "room": {
     "commander": "Commander",
@@ -30,6 +34,7 @@
     "all_land_sim": "ALL RALLIES LAND SIMULTANEOUSLY",
     "objective": "OBJECTIVE",
     "lock_and_start": "Lock & Start",
+    "unlock": "Unlock",
     "driver_list": "Drivers",
     "col_driver": "Driver",
     "col_march": "March",
@@ -48,6 +53,11 @@
     "rallying_check": "I'm rallying too",
     "rallying_hint": "(Off = coordinator only, hidden from list)",
     "coordinator_only": "COORDINATOR ONLY",
+    "coordinator_desc": "You're only coordinating — not in driver list",
+    "locked_banner": "🔒 RALLY LOCKED — commander must unlock to edit",
+    "loading": "LOADING · Connecting",
+    "initializing": "INITIALIZING ROOM",
+    "days_after": "{{days}} days later",
     "copied": "Link copied to clipboard",
     "copy_failed": "Copy failed, please copy URL manually"
   },
