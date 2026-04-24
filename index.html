@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#030714" />
+    <meta name="description" content="寒霜啟示錄・王城指揮作戰系統。與車頭即時協同的開車工具。" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Orbitron:wght@500;700;900&family=Noto+Sans+TC:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <title>王城指揮作戰系統 · Whiteout Coord</title>
+    <script>
+      // SPA 404 redirect decoder · 必須在 React 掛載前執行
+      // 搭配 public/404.html 運作，讓 GitHub Pages 支援直接連結 /room/:pin
+      (function (l) {
+        if (l.search[1] === '/') {
+          var decoded = l.search
+            .slice(1)
+            .split('&')
+            .map(function (s) {
+              return s.replace(/~and~/g, '&');
+            })
+            .join('?');
+          window.history.replaceState(
+            null,
+            '',
+            l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      })(window.location);
+    </script>
+    <script type="module" crossorigin src="/whiteout-coord/assets/index-C1cUYRii.js"></script>
+    <link rel="stylesheet" crossorigin href="/whiteout-coord/assets/index-B2JcQsWh.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>

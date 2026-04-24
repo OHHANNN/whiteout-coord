@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Redirecting…</title>
+    <script>
+      // SPA redirect for GitHub Pages
+      // 把 /whiteout-coord/room/12345678 轉成 /whiteout-coord/?/room/12345678
+      // 然後 index.html 裡的 decoder 再把它還原成 /whiteout-coord/room/12345678
+      // 參考 https://github.com/rafgraph/spa-github-pages
+      var segmentsToKeep = 1; // 'whiteout-coord'
+      var l = window.location;
+      l.replace(
+        l.protocol +
+          '//' +
+          l.hostname +
+          (l.port ? ':' + l.port : '') +
+          l.pathname.split('/').slice(0, 1 + segmentsToKeep).join('/') +
+          '/?/' +
+          l.pathname
+            .slice(1)
+            .split('/')
+            .slice(segmentsToKeep)
+            .join('/')
+            .replace(/&/g, '~and~') +
+          (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+          l.hash
+      );
+    </script>
+  </head>
+  <body></body>
+</html>
