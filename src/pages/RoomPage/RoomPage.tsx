@@ -7,6 +7,7 @@ import { Button } from '@/components/Button/Button';
 import { CommanderPanel } from '@/components/CommanderPanel/CommanderPanel';
 import { useConfirm } from '@/components/ConfirmDialog/ConfirmDialog';
 import { DriverTable } from '@/components/DriverTable/DriverTable';
+import { PassengerList } from '@/components/PassengerList/PassengerList';
 import { LangSwitch } from '@/components/LangSwitch/LangSwitch';
 import { MuteToggle } from '@/components/MuteToggle/MuteToggle';
 import { NamePrompt } from '@/components/NamePrompt/NamePrompt';
@@ -22,8 +23,11 @@ import { beep, unlockAudio } from '@/lib/audio';
 
 import styles from './RoomPage.module.scss';
 
+import type { ParticipantType } from '@/types/room';
+
 const PIN_REGEX = /^[0-9]{8}$/;
 const NAME_STORAGE_KEY = 'whiteout-coord:name';
+const TYPE_STORAGE_KEY = 'whiteout-coord:type';
 const MUTE_STORAGE_KEY = 'whiteout-coord:muted';
 
 export function RoomPage() {
@@ -33,6 +37,10 @@ export function RoomPage() {
   const { user, error: authError } = useAuth();
   const confirm = useConfirm();
   const [storedName, setStoredName] = useLocalStorage<string>(NAME_STORAGE_KEY, '');
+  const [storedType, setStoredType] = useLocalStorage<ParticipantType>(
+    TYPE_STORAGE_KEY,
+    'driver'
+  );
   const [muted, setMuted] = useLocalStorage<boolean>(MUTE_STORAGE_KEY, false);
   const [toast, setToast] = useState<{ msg: string; variant: 'success' | 'error' } | null>(null);
 
@@ -54,9 +62,9 @@ export function RoomPage() {
     renameWave,
     startBattle,
     deleteBattle,
-  } = useRoom(pin, user?.uid, storedName);
+  } = useRoom(pin, user?.uid, storedName, storedType);
 
-  // 只有「rallying」的車頭才列入名單（指揮官關掉後不算車頭）
+  // 「rallying」中拆成兩組：車頭（driver）/ 車身（passenger）
   const rallyingMembers = useMemo(() => {
     const result: Record<string, typeof members[string]> = {};
     for (const [uid, m] of Object.entries(members)) {
@@ -64,6 +72,22 @@ export function RoomPage() {
     }
     return result;
   }, [members]);
+
+  const driverMembers = useMemo(() => {
+    const result: Record<string, typeof members[string]> = {};
+    for (const [uid, m] of Object.entries(rallyingMembers)) {
+      if ((m.participantType ?? 'driver') === 'driver') result[uid] = m;
+    }
+    return result;
+  }, [rallyingMembers]);
+
+  const passengerMembers = useMemo(() => {
+    const result: Record<string, typeof members[string]> = {};
+    for (const [uid, m] of Object.entries(rallyingMembers)) {
+      if ((m.participantType ?? 'driver') === 'passenger') result[uid] = m;
+    }
+    return result;
+  }, [rallyingMembers]);
 
   const onlineCount = useMemo(
     () =>
@@ -155,7 +179,11 @@ export function RoomPage() {
     return (
       <NamePrompt
         initialName=""
-        onSubmit={(name) => setStoredName(name)}
+        initialType={storedType}
+        onSubmit={(name, type) => {
+          setStoredType(type);
+          setStoredName(name);
+        }}
         pin={pin}
       />
     );
@@ -315,6 +343,15 @@ export function RoomPage() {
       updateMyMember({ landingOffsetSeconds: next });
     } else if (isCommander) {
       updateMember(targetUid, { landingOffsetSeconds: next });
+    }
+  };
+
+  const handleSetType = (targetUid: string, type: ParticipantType) => {
+    if (targetUid === user?.uid) {
+      setStoredType(type);
+      updateMyMember({ participantType: type });
+    } else if (isCommander) {
+      updateMember(targetUid, { participantType: type });
     }
   };
 
@@ -496,19 +533,29 @@ export function RoomPage() {
             )}
 
             <DriverTable
-              members={rallyingMembers}
+              members={driverMembers}
               meta={meta}
               myUid={user.uid}
               onSetMarch={handleSetMarch}
               onSetSuicide={handleSetSuicide}
               onSetRally={handleSetRally}
               onSetOffset={handleSetOffset}
+              onSetType={handleSetType}
               onRemove={handleRemoveMember}
               onTransferCommander={
                 isCommander ? handleTransferCommander : undefined
               }
               canRemove={isCommander}
               canEditOthers={isCommander}
+            />
+
+            <PassengerList
+              passengers={passengerMembers}
+              myUid={user.uid}
+              canEditOthers={isCommander}
+              canRemove={isCommander}
+              onPromoteToDriver={(uid) => handleSetType(uid, 'driver')}
+              onRemove={handleRemoveMember}
             />
 
             {meta.locked && (

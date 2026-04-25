@@ -18,6 +18,7 @@ interface DriverTableProps {
   onSetSuicide: (uid: string, value: boolean) => void;
   onSetRally: (uid: string, seconds: number) => void;
   onSetOffset: (uid: string, seconds: number) => void;
+  onSetType: (uid: string, type: 'driver' | 'passenger') => void;
   onRemove: (uid: string) => void;
   onTransferCommander?: (uid: string, name: string) => void;
   canRemove: boolean;
@@ -63,6 +64,7 @@ function MarchCell({
   onSet: (seconds: number) => void;
   label: string;
 }) {
+  const { t } = useTranslation();
   const [input, setInput] = useState(formatDuration(marchSeconds));
   const focusedRef = useRef(false);
 
@@ -118,7 +120,7 @@ function MarchCell({
             }
           }}
           placeholder="MM:SS"
-          title="輸入行軍時間，例如 1:30 或 90"
+          title={t('room.march_input_hint')}
         />
         <button
           type="button"
@@ -141,6 +143,7 @@ export function DriverTable({
   onSetSuicide,
   onSetRally,
   onSetOffset,
+  onSetType,
   onRemove,
   onTransferCommander,
   canRemove,
@@ -303,16 +306,24 @@ export function DriverTable({
                     <span className={styles.dot} />
                     {t(`room.status_${member.status}`)}
                   </span>
-                  {!isMe && (() => {
+                  {(() => {
                     const items: ActionItem[] = [];
-                    if (onTransferCommander && member.role !== 'commander') {
+                    // 自己 / commander 都可以把這位車頭降為車身
+                    if (isMe || canEditOthers) {
+                      items.push({
+                        label: t('room.demote_to_passenger'),
+                        icon: '↓',
+                        onSelect: () => onSetType(uid, 'passenger'),
+                      });
+                    }
+                    if (!isMe && onTransferCommander && member.role !== 'commander') {
                       items.push({
                         label: t('room.transfer_commander_title'),
                         icon: '→',
                         onSelect: () => onTransferCommander(uid, member.name),
                       });
                     }
-                    if (canRemove) {
+                    if (!isMe && canRemove) {
                       items.push({
                         label: t('room.confirm_remove_short'),
                         icon: '×',
@@ -330,7 +341,7 @@ export function DriverTable({
         {rows.length === 0 && (
           <tr>
             <td colSpan={7} className={styles.empty}>
-              No drivers yet · 尚無車頭
+              {t('room.no_drivers_yet')}
             </td>
           </tr>
         )}

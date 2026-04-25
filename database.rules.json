@@ -90,6 +90,9 @@
             "landingOffsetSeconds": {
               ".validate": "newData.isNumber() && newData.val() >= -60 && newData.val() <= 60 || newData.val() == null"
             },
+            "participantType": {
+              ".validate": "newData.val() == 'driver' || newData.val() == 'passenger' || newData.val() == null"
+            },
             "$other": { ".validate": false }
           }
         },

@@ -17,6 +17,7 @@ import type {
   BattleSnapshot,
   Member,
   MemberStatus,
+  ParticipantType,
   RoomMeta,
   WavePreset,
 } from '@/types/room';
@@ -76,7 +77,8 @@ const initialState: UseRoomState = {
 export function useRoom(
   pin: string | undefined,
   uid: string | undefined,
-  name: string
+  name: string,
+  initialType: ParticipantType = 'driver'
 ): UseRoomState & UseRoomActions {
   const [state, setState] = useState<UseRoomState>(initialState);
   const joinedRef = useRef(false);
@@ -161,6 +163,7 @@ export function useRoom(
             rallying: true,
             rallyWindowSeconds: 300,
             landingOffsetSeconds: 0,
+            participantType: initialType,
           };
           await set(ref(database, `rooms/${pin}`), {
             meta,
@@ -189,6 +192,7 @@ export function useRoom(
             rallying: existingMember?.rallying ?? true,
             rallyWindowSeconds: existingMember?.rallyWindowSeconds ?? 300,
             landingOffsetSeconds: existingMember?.landingOffsetSeconds ?? 0,
+            participantType: existingMember?.participantType ?? initialType,
           };
           await set(myRef, member);
           if (cancelled) return;

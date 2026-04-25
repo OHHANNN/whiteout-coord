@@ -3,6 +3,12 @@
     "confirm": "確定",
     "cancel": "取消"
   },
+  "sound": {
+    "on": "聲音：開",
+    "off": "聲音：關",
+    "mute": "靜音",
+    "unmute": "取消靜音"
+  },
   "brand": {
     "kicker": "WHITEOUT · SURVIVAL",
     "title": "王城指揮系統",
@@ -19,9 +25,13 @@
     "enter_room": "進入作戰房間",
     "hint": "指揮官建立房間後將 PIN 同步至車頭 (Discord / LINE)",
     "pin_invalid": "PIN 必須為 8 位數字",
-    "enter_name_title": "輸入你的車頭名稱",
+    "enter_name_title": "輸入你的名稱",
     "enter_name_sub": "ENTER YOUR CALLSIGN",
-    "name_placeholder": "例如：CocoMelon"
+    "name_placeholder": "例如：CocoMelon",
+    "type_driver": "車頭",
+    "type_driver_hint": "發起自己的集結",
+    "type_passenger": "車身",
+    "type_passenger_hint": "加入別人的集結"
   },
   "lang": {
     "zh": "繁中",
@@ -81,6 +91,16 @@
     "commander_offline": "離線中",
     "confirm_remove": "確定要從房間踢除「{{name}}」？",
     "confirm_remove_short": "踢除",
+    "passenger_list": "車身名單",
+    "no_drivers_yet": "尚無車頭",
+    "march_input_hint": "輸入行軍時間，例如 1:30 或 90",
+    "objective_placeholder": "王城城門 · MAIN GATE",
+    "shortcut_5m": "從現在起 5 分鐘後落地",
+    "shortcut_6m_counter": "反集結（從當下含秒數 +6 分鐘）",
+    "shortcut_10m": "從現在起 10 分鐘後落地",
+    "shortcut_30m": "從現在起 30 分鐘後落地",
+    "demote_to_passenger": "切換為車身",
+    "promote_to_driver": "切換為車頭",
     "auto_cleaned": "已自動清除 {{count}} 位離線超過 5 小時的車頭",
     "waves_label": "WAVES · 波次預設",
     "save_wave": "儲存當前為新波次",
@@ -116,6 +136,9 @@
     "auth_failed": "登入失敗",
     "room_load_failed": "房間載入失敗",
     "retry": "重試",
-    "back_to_entry": "返回進入頁"
+    "back_to_entry": "返回進入頁",
+    "system_error": "系統錯誤",
+    "system_error_hint": "系統異常 · 請重新整理頁面",
+    "reload": "重新整理"
   }
 }

@@ -3,6 +3,12 @@
     "confirm": "확인",
     "cancel": "취소"
   },
+  "sound": {
+    "on": "소리: 켜짐",
+    "off": "소리: 꺼짐",
+    "mute": "음소거",
+    "unmute": "음소거 해제"
+  },
   "brand": {
     "kicker": "WHITEOUT · SURVIVAL",
     "title": "왕성 지휘 시스템",
@@ -19,9 +25,13 @@
     "enter_room": "작전 방 입장",
     "hint": "지휘관이 방을 만든 후 PIN을 집결 리더들에게 공유하세요 (Discord / LINE)",
     "pin_invalid": "PIN은 8자리 숫자여야 합니다",
-    "enter_name_title": "리더 이름을 입력하세요",
+    "enter_name_title": "이름을 입력하세요",
     "enter_name_sub": "ENTER YOUR CALLSIGN",
-    "name_placeholder": "예: CocoMelon"
+    "name_placeholder": "예: CocoMelon",
+    "type_driver": "차머리",
+    "type_driver_hint": "직접 집결을 시작",
+    "type_passenger": "차몸",
+    "type_passenger_hint": "다른 사람의 집결에 참가"
   },
   "lang": {
     "zh": "繁中",
@@ -81,6 +91,16 @@
     "commander_offline": "오프라인",
     "confirm_remove": "「{{name}}」을(를) 방에서 내보내시겠습니까?",
     "confirm_remove_short": "내보내기",
+    "passenger_list": "차몸 목록",
+    "no_drivers_yet": "아직 차머리가 없습니다",
+    "march_input_hint": "행군 시간 입력 (예: 1:30 또는 90)",
+    "objective_placeholder": "왕성 정문",
+    "shortcut_5m": "지금부터 5분 후 착지",
+    "shortcut_6m_counter": "역집결 (지금 +6분, 초 단위 유지)",
+    "shortcut_10m": "지금부터 10분 후 착지",
+    "shortcut_30m": "지금부터 30분 후 착지",
+    "demote_to_passenger": "차몸으로 전환",
+    "promote_to_driver": "차머리로 전환",
     "auto_cleaned": "5시간 이상 오프라인 상태인 리더 {{count}}명을 자동으로 정리했습니다",
     "waves_label": "WAVES · 웨이브 프리셋",
     "save_wave": "현재 설정을 새 웨이브로 저장",
@@ -116,6 +136,9 @@
     "auth_failed": "로그인 실패",
     "room_load_failed": "방 로딩 실패",
     "retry": "재시도",
-    "back_to_entry": "입장 페이지로 돌아가기"
+    "back_to_entry": "입장 페이지로 돌아가기",
+    "system_error": "시스템 오류",
+    "system_error_hint": "시스템 오류 · 페이지를 새로고침해주세요",
+    "reload": "새로고침"
   }
 }

@@ -1,0 +1,106 @@
+.section {
+  margin-top: 20px;
+  border-top: 1px dashed $hud-cyan-line;
+  padding-top: 16px;
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: $font-display;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: $text;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.count {
+  font-family: $font-mono;
+  color: $text-muted;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid rgba(0, 255, 255, 0.08);
+  background: rgba(0, 255, 255, 0.015);
+  font-family: $font-sans;
+  font-size: 13px;
+
+  @include mobile {
+    flex-wrap: wrap;
+  }
+}
+
+.self {
+  background: linear-gradient(90deg, rgba(255, 59, 59, 0.06), transparent 60%);
+}
+
+.name {
+  color: $text;
+  font-weight: 500;
+  flex: 1;
+  min-width: 0;
+}
+
+.chip {
+  display: inline-block;
+  padding: 2px 8px;
+  border: 1px solid $hud-cyan-line;
+  color: $hud-cyan;
+  font-family: $font-mono;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: $font-mono;
+  font-size: 11px;
+
+  &.ready {
+    color: $success;
+    .dot {
+      background: $success;
+      box-shadow: $glow-success;
+    }
+  }
+  &.adjusting {
+    color: $warning;
+    .dot {
+      background: $warning;
+      box-shadow: 0 0 6px rgba(255, 176, 32, 0.6);
+    }
+  }
+  &.offline {
+    color: $text-dim;
+    .dot {
+      background: $text-dim;
+    }
+  }
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}

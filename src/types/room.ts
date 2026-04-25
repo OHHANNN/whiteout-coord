@@ -5,6 +5,12 @@
 
 export type MemberRole = 'commander' | 'driver';
 export type MemberStatus = 'ready' | 'adjusting' | 'offline';
+/**
+ * 集結參與類型：
+ *   driver    = 車頭，發起自己的集結（有 march / rally / offset / launch）
+ *   passenger = 車身，只加入別人的集結（不需要 launch 計算）
+ */
+export type ParticipantType = 'driver' | 'passenger';
 
 /**
  * 波次預設 · commander 預先存好的目標時間 / 建築 / 座標。
@@ -101,6 +107,11 @@ export interface Member {
    * 發車   = target_landing + landingOffsetSeconds − march − rally
    */
   landingOffsetSeconds?: number;
+  /**
+   * 集結參與類型。預設 'driver'（車頭）。
+   * 'passenger' = 車身，只加入別人的集結，不出現在車頭名單。
+   */
+  participantType?: ParticipantType;
 }
 
 export interface Room {

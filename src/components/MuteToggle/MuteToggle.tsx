@@ -1,4 +1,6 @@
 import clsx from 'clsx';
+import { useTranslation } from 'react-i18next';
+
 import styles from './MuteToggle.module.scss';
 
 interface MuteToggleProps {
@@ -8,13 +10,14 @@ interface MuteToggleProps {
 }
 
 export function MuteToggle({ muted, onChange, className }: MuteToggleProps) {
+  const { t } = useTranslation();
   return (
     <button
       type="button"
       className={clsx(styles.btn, muted && styles.muted, className)}
       onClick={() => onChange(!muted)}
-      aria-label={muted ? 'Unmute' : 'Mute'}
-      title={muted ? '聲音：關' : '聲音：開'}
+      aria-label={muted ? t('sound.unmute') : t('sound.mute')}
+      title={muted ? t('sound.off') : t('sound.on')}
     >
       <svg
         width="14"

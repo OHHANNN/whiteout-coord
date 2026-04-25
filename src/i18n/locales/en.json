@@ -3,6 +3,12 @@
     "confirm": "Confirm",
     "cancel": "Cancel"
   },
+  "sound": {
+    "on": "Sound: On",
+    "off": "Sound: Off",
+    "mute": "Mute",
+    "unmute": "Unmute"
+  },
   "brand": {
     "kicker": "WHITEOUT · SURVIVAL",
     "title": "KING CITY COMMAND",
@@ -19,9 +25,13 @@
     "enter_room": "Enter Room",
     "hint": "Share the PIN with your drivers via Discord / LINE after creating a room.",
     "pin_invalid": "PIN must be 8 digits",
-    "enter_name_title": "Enter your driver name",
+    "enter_name_title": "Enter your callsign",
     "enter_name_sub": "ENTER YOUR CALLSIGN",
-    "name_placeholder": "e.g., CocoMelon"
+    "name_placeholder": "e.g., CocoMelon",
+    "type_driver": "Driver",
+    "type_driver_hint": "Lead your own rally",
+    "type_passenger": "Passenger",
+    "type_passenger_hint": "Join someone else's rally"
   },
   "lang": {
     "zh": "繁中",
@@ -81,6 +91,16 @@
     "commander_offline": "offline",
     "confirm_remove": "Remove \"{{name}}\" from the room?",
     "confirm_remove_short": "Remove",
+    "passenger_list": "Passengers",
+    "no_drivers_yet": "No drivers yet",
+    "march_input_hint": "Enter march time, e.g. 1:30 or 90",
+    "objective_placeholder": "King City Main Gate",
+    "shortcut_5m": "Land 5 minutes from now",
+    "shortcut_6m_counter": "Counter-rally (now + 6m, keeps seconds)",
+    "shortcut_10m": "Land 10 minutes from now",
+    "shortcut_30m": "Land 30 minutes from now",
+    "demote_to_passenger": "Switch to Passenger",
+    "promote_to_driver": "Switch to Driver",
     "auto_cleaned": "Auto-removed {{count}} drivers offline for more than 5 hours",
     "waves_label": "WAVES · PRESETS",
     "save_wave": "Save Current as New Wave",
@@ -116,6 +136,9 @@
     "auth_failed": "Sign-in failed",
     "room_load_failed": "Failed to load room",
     "retry": "Retry",
-    "back_to_entry": "Back to entry"
+    "back_to_entry": "Back to entry",
+    "system_error": "SYSTEM ERROR",
+    "system_error_hint": "Something went wrong · please reload the page",
+    "reload": "RELOAD"
   }
 }

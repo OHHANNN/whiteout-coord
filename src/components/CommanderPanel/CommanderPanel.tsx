@@ -161,30 +161,18 @@ export function CommanderPanel({
             </div>
             <div className={styles.btnRow}>
               {[
-                { label: '+5m', sec: 5 * 60, title: '從現在起 5 分鐘後落地' },
-                {
-                  label: '+6m',
-                  sec: 6 * 60,
-                  title: '反集結（從當下含秒數 +6 分鐘）',
-                },
-                {
-                  label: '+10m',
-                  sec: 10 * 60,
-                  title: '從現在起 10 分鐘後落地',
-                },
-                {
-                  label: '+30m',
-                  sec: 30 * 60,
-                  title: '從現在起 30 分鐘後落地',
-                },
-              ].map(({ label, sec, title }) => (
+                { label: '+5m', sec: 5 * 60, key: 'shortcut_5m' },
+                { label: '+6m', sec: 6 * 60, key: 'shortcut_6m_counter' },
+                { label: '+10m', sec: 10 * 60, key: 'shortcut_10m' },
+                { label: '+30m', sec: 30 * 60, key: 'shortcut_30m' },
+              ].map(({ label, sec, key }) => (
                 <button
                   key={label}
                   type="button"
                   className={styles.chip}
                   onClick={() => setRelative(sec)}
                   disabled={meta.locked}
-                  title={title}
+                  title={t(`room.${key}`)}
                 >
                   {label}
                 </button>
@@ -244,7 +232,7 @@ export function CommanderPanel({
           <input
             className={styles.input}
             value={label}
-            placeholder="王城城門 · MAIN GATE"
+            placeholder={t('room.objective_placeholder')}
             onChange={(e) => setLabel(e.target.value)}
             onBlur={commitLabel}
             disabled={meta.locked}
