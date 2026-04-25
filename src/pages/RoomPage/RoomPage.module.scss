@@ -13,9 +13,30 @@
 .loadingWrap {
   min-height: 70vh;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 24px;
   padding: 24px;
+}
+
+.escapeBtn {
+  padding: 8px 18px;
+  border: 1px solid $hud-cyan-line;
+  background: transparent;
+  color: $hud-cyan-dim;
+  font-family: $font-mono;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+
+  &:hover {
+    border-color: $hud-cyan;
+    color: $hud-cyan;
+    background: $hud-cyan-soft;
+    text-shadow: $glow-cyan;
+  }
 }
 
 .errorBox {

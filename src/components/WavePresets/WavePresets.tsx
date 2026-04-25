@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { useConfirm } from '@/components/ConfirmDialog/ConfirmDialog';
 import { formatUtcTime } from '@/lib/time';
 
 import type { RoomMeta, WavePreset } from '@/types/room';
@@ -32,6 +33,7 @@ export function WavePresets({
   onRename,
 }: WavePresetsProps) {
   const { t } = useTranslation();
+  const confirm = useConfirm();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
 
@@ -65,9 +67,12 @@ export function WavePresets({
     setEditName('');
   };
 
-  const handleDelete = (preset: WavePreset) => {
+  const handleDelete = async (preset: WavePreset) => {
     const name = preset.name ?? `Wave`;
-    const ok = window.confirm(t('room.confirm_delete_wave', { name }));
+    const ok = await confirm({
+      message: t('room.confirm_delete_wave', { name }),
+      variant: 'danger',
+    });
     if (!ok) return;
     onDelete(preset.id);
   };

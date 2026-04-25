@@ -1,4 +1,8 @@
 {
+  "common": {
+    "confirm": "確定",
+    "cancel": "取消"
+  },
   "brand": {
     "kicker": "WHITEOUT · SURVIVAL",
     "title": "王城指揮系統",
@@ -85,7 +89,10 @@
     "battle_drivers": "車頭 {{count}} · 在線 {{online}}",
     "battle_locked_at": "鎖定 {{time}}",
     "delete_battle": "刪除這份戰報",
-    "confirm_delete_battle": "確定刪除這份戰報？刪掉之後就找不回來了。"
+    "confirm_delete_battle": "確定刪除這份戰報？刪掉之後就找不回來了。",
+    "kicked": "你已被指揮官踢出房間",
+    "confirm_leave": "確定離開房間？",
+    "confirm_leave_as_commander": "你是指揮官，離開後房間會暫時沒人指揮（其他車頭可以接管，或是你在離開前先把指揮權轉給其他人）。確定離開？"
   },
   "error": {
     "room_not_found": "房間不存在或已過期",

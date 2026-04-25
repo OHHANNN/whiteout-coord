@@ -1,4 +1,8 @@
 {
+  "common": {
+    "confirm": "Confirm",
+    "cancel": "Cancel"
+  },
   "brand": {
     "kicker": "WHITEOUT · SURVIVAL",
     "title": "KING CITY COMMAND",
@@ -85,7 +89,10 @@
     "battle_drivers": "{{count}} drivers · {{online}} online",
     "battle_locked_at": "Locked at {{time}}",
     "delete_battle": "Delete this battle log",
-    "confirm_delete_battle": "Delete this battle log? This cannot be undone."
+    "confirm_delete_battle": "Delete this battle log? This cannot be undone.",
+    "kicked": "You have been removed from the room by the commander",
+    "confirm_leave": "Leave the room?",
+    "confirm_leave_as_commander": "You are the commander. After leaving, the room will be temporarily without one (others can claim, or you can transfer command before leaving). Leave anyway?"
   },
   "error": {
     "room_not_found": "Room not found or expired",

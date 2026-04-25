@@ -4,6 +4,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 
 import '@mantine/core/styles.css';
 
+import { ConfirmProvider } from '@/components/ConfirmDialog/ConfirmDialog';
 import { ConnectionStatus } from '@/components/ConnectionStatus/ConnectionStatus';
 import { ErrorBoundary } from '@/components/ErrorBoundary/ErrorBoundary';
 import { useAuth } from '@/hooks/useAuth';
@@ -46,14 +47,16 @@ export function App() {
   return (
     <MantineProvider theme={theme} defaultColorScheme="dark">
       <ErrorBoundary>
-        <ConnectionStatus />
-        <BrowserRouter basename={basename}>
-          <Routes>
-            <Route path="/" element={<EntryPage />} />
-            <Route path="/room/:pin" element={<RoomPage />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </BrowserRouter>
+        <ConfirmProvider>
+          <ConnectionStatus />
+          <BrowserRouter basename={basename}>
+            <Routes>
+              <Route path="/" element={<EntryPage />} />
+              <Route path="/room/:pin" element={<RoomPage />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </BrowserRouter>
+        </ConfirmProvider>
       </ErrorBoundary>
     </MantineProvider>
   );

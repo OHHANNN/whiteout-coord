@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { useConfirm } from '@/components/ConfirmDialog/ConfirmDialog';
 import { formatDuration, formatUtcTime } from '@/lib/time';
 
 import type { BattleSnapshot, RoomMeta } from '@/types/room';
@@ -21,6 +22,7 @@ interface BattleHistoryProps {
  */
 export function BattleHistory({ meta, canDelete, onDelete }: BattleHistoryProps) {
   const { t } = useTranslation();
+  const confirm = useConfirm();
   const [expanded, setExpanded] = useState(false);
   const [openBattleId, setOpenBattleId] = useState<string | null>(null);
 
@@ -32,8 +34,11 @@ export function BattleHistory({ meta, canDelete, onDelete }: BattleHistoryProps)
 
   if (battles.length === 0) return null;
 
-  const handleDelete = (battle: BattleSnapshot) => {
-    const ok = window.confirm(t('room.confirm_delete_battle'));
+  const handleDelete = async (battle: BattleSnapshot) => {
+    const ok = await confirm({
+      message: t('room.confirm_delete_battle'),
+      variant: 'danger',
+    });
     if (!ok) return;
     onDelete(battle.id);
     if (openBattleId === battle.id) setOpenBattleId(null);

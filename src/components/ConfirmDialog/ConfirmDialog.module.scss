@@ -1,0 +1,176 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background:
+    radial-gradient(ellipse at center, rgba(0, 255, 255, 0.04), transparent 60%),
+    rgba(3, 7, 20, 0.85);
+  backdrop-filter: blur(6px);
+  animation: fadeIn 0.18s ease-out;
+
+  @include reduced-motion {
+    animation: none;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.dialog {
+  position: relative;
+  max-width: 460px;
+  width: 100%;
+  background: $bg-panel;
+  border: 1px solid $hud-cyan;
+  padding: 32px 28px 24px;
+  box-shadow:
+    0 0 32px rgba(0, 255, 255, 0.18),
+    0 12px 32px rgba(0, 0, 0, 0.6);
+  animation: slideIn 0.2s ease-out;
+
+  @include reduced-motion {
+    animation: none;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-12px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+// 四個角落 HUD bracket
+.cornerTL,
+.cornerTR,
+.cornerBL,
+.cornerBR {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-color: $hud-cyan;
+  border-style: solid;
+  pointer-events: none;
+}
+.cornerTL {
+  top: -1px;
+  left: -1px;
+  border-width: 2px 0 0 2px;
+}
+.cornerTR {
+  top: -1px;
+  right: -1px;
+  border-width: 2px 2px 0 0;
+}
+.cornerBL {
+  bottom: -1px;
+  left: -1px;
+  border-width: 0 0 2px 2px;
+}
+.cornerBR {
+  bottom: -1px;
+  right: -1px;
+  border-width: 0 2px 2px 0;
+}
+
+.title {
+  font-family: $font-display;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: $hud-cyan;
+  text-shadow: $glow-cyan;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+
+.message {
+  font-family: $font-sans;
+  font-size: 14px;
+  line-height: 1.7;
+  color: $text;
+  margin-bottom: 26px;
+  white-space: pre-line;
+}
+
+.buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.cancelBtn,
+.confirmBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 0 20px;
+  font-family: $font-display;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border: 1px solid;
+  background: transparent;
+  transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+  @include chamfered(6px);
+}
+
+.cancelBtn {
+  border-color: $hud-cyan-line;
+  color: $text-muted;
+
+  &:hover {
+    border-color: $hud-cyan;
+    color: $hud-cyan;
+    background: $hud-cyan-soft;
+  }
+}
+
+.confirmBtn {
+  border-color: $hud-cyan;
+  color: $bg-deep;
+  background: $hud-cyan;
+  box-shadow: $glow-cyan;
+
+  &:hover {
+    box-shadow: 0 0 14px rgba(0, 255, 255, 0.8);
+  }
+
+  &:focus-visible {
+    outline: 2px solid $hud-cyan;
+    outline-offset: 2px;
+  }
+}
+
+.confirmBtn.danger {
+  border-color: $alert;
+  background: $alert;
+  color: #fff;
+  box-shadow: $glow-alert;
+  text-shadow: 0 0 4px rgba(0, 0, 0, 0.6);
+
+  &:hover {
+    box-shadow: 0 0 14px rgba(255, 59, 59, 0.8);
+  }
+
+  &:focus-visible {
+    outline-color: $alert;
+  }
+}

@@ -5,6 +5,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { BattleHistory } from '@/components/BattleHistory/BattleHistory';
 import { Button } from '@/components/Button/Button';
 import { CommanderPanel } from '@/components/CommanderPanel/CommanderPanel';
+import { useConfirm } from '@/components/ConfirmDialog/ConfirmDialog';
 import { DriverTable } from '@/components/DriverTable/DriverTable';
 import { LangSwitch } from '@/components/LangSwitch/LangSwitch';
 import { MuteToggle } from '@/components/MuteToggle/MuteToggle';
@@ -30,6 +31,7 @@ export function RoomPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, error: authError } = useAuth();
+  const confirm = useConfirm();
   const [storedName, setStoredName] = useLocalStorage<string>(NAME_STORAGE_KEY, '');
   const [muted, setMuted] = useLocalStorage<boolean>(MUTE_STORAGE_KEY, false);
   const [toast, setToast] = useState<{ msg: string; variant: 'success' | 'error' } | null>(null);
@@ -83,6 +85,26 @@ export function RoomPage() {
   useEffect(() => {
     if (pinInvalid) navigate('/', { replace: true });
   }, [pinInvalid, navigate]);
+
+  // 偵測「我曾經是 member、現在不見了」= 被踢出 → 跳回進入頁
+  // wasMemberRef：曾經在房內、即使被踢出後仍為 true
+  // isLeavingRef：自己主動離開（按「離開」按鈕）→ 跳過踢出偵測
+  const wasMemberRef = useRef(false);
+  const isLeavingRef = useRef(false);
+  useEffect(() => {
+    if (!user || !meta || isLeavingRef.current) return;
+    if (members[user.uid]) {
+      wasMemberRef.current = true;
+      return;
+    }
+    if (wasMemberRef.current) {
+      // 我曾經在、現在不見 → 被指揮官踢
+      setToast({ msg: t('room.kicked'), variant: 'error' });
+      const id = window.setTimeout(() => navigate('/', { replace: true }), 1800);
+      return () => window.clearTimeout(id);
+    }
+    return;
+  }, [members, user, meta, navigate, t]);
 
   // 自動清除：指揮官進房 3 秒後一次性檢查、踢掉離線 > 24h 的車頭
   // 用 ref 避免 members 變動時無限重跑
@@ -178,6 +200,13 @@ export function RoomPage() {
     return (
       <div className={styles.loadingWrap}>
         <div className={styles.loadingText}>{t('room.loading')}</div>
+        <button
+          type="button"
+          className={styles.escapeBtn}
+          onClick={() => navigate('/', { replace: true })}
+        >
+          ← {t('error.back_to_entry')}
+        </button>
       </div>
     );
   }
@@ -187,6 +216,13 @@ export function RoomPage() {
     return (
       <div className={styles.loadingWrap}>
         <div className={styles.loadingText}>{t('room.initializing')}</div>
+        <button
+          type="button"
+          className={styles.escapeBtn}
+          onClick={() => navigate('/', { replace: true })}
+        >
+          ← {t('error.back_to_entry')}
+        </button>
       </div>
     );
   }
@@ -195,7 +231,26 @@ export function RoomPage() {
     Object.entries(members).find(([, m]) => m.role === 'commander')?.[1].name ?? '—';
 
   const handleLeave = async () => {
-    await leaveRoom();
+    // 指揮官 + 房裡還有其他人 → 加強警告
+    const others = user?.uid
+      ? Object.keys(members).filter((uid) => uid !== user.uid).length
+      : 0;
+    const isCommanderWithOthers = isCommander && others > 0;
+    const ok = await confirm({
+      message: isCommanderWithOthers
+        ? t('room.confirm_leave_as_commander')
+        : t('room.confirm_leave'),
+      variant: isCommanderWithOthers ? 'danger' : 'default',
+      confirmText: t('room.leave'),
+    });
+    if (!ok) return;
+
+    isLeavingRef.current = true;
+    try {
+      await leaveRoom();
+    } catch {
+      // 即使 Firebase 寫入失敗也讓使用者離開頁面、不要卡住
+    }
     setStoredName(storedName); // 保留名字方便下次
     navigate('/', { replace: true });
   };
@@ -242,18 +297,24 @@ export function RoomPage() {
     }
   };
 
-  const handleTransferCommander = (targetUid: string, targetName: string) => {
-    const ok = window.confirm(t('room.confirm_transfer', { name: targetName }));
+  const handleTransferCommander = async (targetUid: string, targetName: string) => {
+    const ok = await confirm({
+      message: t('room.confirm_transfer', { name: targetName }),
+      confirmText: t('room.commander'),
+    });
     if (!ok) return;
     transferCommander(targetUid).catch(() =>
       setToast({ msg: t('error.transfer_failed'), variant: 'error' })
     );
   };
 
-  const handleRemoveMember = (targetUid: string) => {
+  const handleRemoveMember = async (targetUid: string) => {
     const member = members[targetUid];
     if (!member) return;
-    const ok = window.confirm(t('room.confirm_remove', { name: member.name }));
+    const ok = await confirm({
+      message: t('room.confirm_remove', { name: member.name }),
+      variant: 'danger',
+    });
     if (!ok) return;
     removeMember(targetUid).catch(() =>
       setToast({ msg: t('error.remove_failed'), variant: 'error' })
@@ -269,9 +330,12 @@ export function RoomPage() {
     Date.now() - (commanderMember.lastSeen ?? 0) > 90_000;
   const canClaimCommander = !!me && !isCommander && (commanderAbsent || commanderStale);
 
-  const handleClaim = () => {
+  const handleClaim = async () => {
     if (!user?.uid) return;
-    const ok = window.confirm(t('room.confirm_claim'));
+    const ok = await confirm({
+      message: t('room.confirm_claim'),
+      confirmText: t('room.claim_commander'),
+    });
     if (!ok) return;
     transferCommander(user.uid).catch(() =>
       setToast({ msg: t('error.transfer_failed'), variant: 'error' })
