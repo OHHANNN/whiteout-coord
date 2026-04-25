@@ -128,10 +128,15 @@ export function useRoom(
   useEffect(() => {
     if (!pin || !uid || !name || state.loading || joinedRef.current) return;
 
+    // 切換房間時 cleanup 會把 cancelled 設為 true，
+    // 每個 await 之後檢查、unmount 後就不寫 Firebase / 不 setState
+    let cancelled = false;
+
     (async () => {
       try {
         const metaRef = ref(database, `rooms/${pin}/meta`);
         const metaSnap = await get(metaRef);
+        if (cancelled) return;
 
         // 房間不存在 → 建立（自己成為 commander）
         if (!metaSnap.exists()) {
@@ -159,11 +164,13 @@ export function useRoom(
             meta,
             members: { [uid]: member },
           });
+          if (cancelled) return;
           logInfo('useRoom · created', pin);
         } else {
           // 房間存在 → 以 driver 加入（或更新自己 name）
           const myRef = ref(database, `rooms/${pin}/members/${uid}`);
           const mySnap = await get(myRef);
+          if (cancelled) return;
           const existingMember = mySnap.val() as Member | null;
 
           const now = Date.now();
@@ -180,6 +187,7 @@ export function useRoom(
             rallying: existingMember?.rallying ?? true,
           };
           await set(myRef, member);
+          if (cancelled) return;
           logInfo('useRoom · joined', pin);
         }
 
@@ -197,6 +205,7 @@ export function useRoom(
           lastActivityAt: serverTimestamp(),
         });
       } catch (err) {
+        if (cancelled) return;
         logError('useRoom · join/create failed', err);
         setState((s) => ({
           ...s,
@@ -204,6 +213,11 @@ export function useRoom(
         }));
       }
     })();
+
+    return () => {
+      // unmount / pin uid name 變動 → 中斷飛行中的 async work
+      cancelled = true;
+    };
     // state.loading intentionally included: 等訂閱抓到資料再決定建/加入
   }, [pin, uid, name, state.loading]);
 
