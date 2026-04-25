@@ -79,7 +79,13 @@
     "delete_wave_hint": "Delete this wave preset",
     "wave_double_click_hint": "Click to load · Double-click to rename",
     "confirm_delete_wave": "Delete wave \"{{name}}\"?",
-    "current_wave": "Currently active"
+    "current_wave": "Currently active",
+    "battle_history": "Battle Log",
+    "battle_no_wave": "Ad-hoc",
+    "battle_drivers": "{{count}} drivers · {{online}} online",
+    "battle_locked_at": "Locked at {{time}}",
+    "delete_battle": "Delete this battle log",
+    "confirm_delete_battle": "Delete this battle log? This cannot be undone."
   },
   "error": {
     "room_not_found": "Room not found or expired",
@@ -92,6 +98,8 @@
     "load_wave_failed": "Failed to load wave",
     "delete_wave_failed": "Failed to delete wave",
     "rename_wave_failed": "Failed to rename wave",
+    "start_battle_failed": "Failed to start battle",
+    "delete_battle_failed": "Failed to delete battle log",
     "auth_failed": "Sign-in failed",
     "room_load_failed": "Failed to load room",
     "retry": "Retry",

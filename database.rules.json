@@ -47,6 +47,14 @@
           "wavePresetOrder": {
             ".validate": "newData.hasChildren() || !newData.exists()"
           },
+          "battles": {
+            "$battleId": {
+              ".validate": "newData.hasChildren(['id', 'lockedAt']) || !newData.exists()"
+            }
+          },
+          "battleOrder": {
+            ".validate": "newData.hasChildren() || !newData.exists()"
+          },
           "$other": { ".validate": false }
         },
 

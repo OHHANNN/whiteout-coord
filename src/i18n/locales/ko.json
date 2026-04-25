@@ -41,7 +41,7 @@
     "col_launch": "출발 · UTC",
     "col_until_launch": "출발까지",
     "col_status": "상태",
-    "role_suicide": "SUICIDE",
+    "role_suicide": "선봉대",
     "status_ready": "READY",
     "status_adjusting": "ADJUSTING",
     "status_offline": "OFFLINE",
@@ -79,7 +79,13 @@
     "delete_wave_hint": "이 웨이브 프리셋 삭제",
     "wave_double_click_hint": "클릭으로 불러오기 · 더블클릭으로 이름 변경",
     "confirm_delete_wave": "웨이브「{{name}}」을(를) 삭제하시겠습니까?",
-    "current_wave": "진행 중"
+    "current_wave": "진행 중",
+    "battle_history": "전투 기록",
+    "battle_no_wave": "임시",
+    "battle_drivers": "리더 {{count}} · 접속 {{online}}",
+    "battle_locked_at": "{{time}} 잠금",
+    "delete_battle": "이 전투 기록 삭제",
+    "confirm_delete_battle": "이 전투 기록을 삭제하시겠습니까? 삭제 후 복구할 수 없습니다."
   },
   "error": {
     "room_not_found": "방이 존재하지 않거나 만료되었습니다",
@@ -92,6 +98,8 @@
     "load_wave_failed": "웨이브 불러오기 실패",
     "delete_wave_failed": "웨이브 삭제 실패",
     "rename_wave_failed": "웨이브 이름 변경 실패",
+    "start_battle_failed": "작전 시작 실패",
+    "delete_battle_failed": "전투 기록 삭제 실패",
     "auth_failed": "로그인 실패",
     "room_load_failed": "방 로딩 실패",
     "retry": "재시도",

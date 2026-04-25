@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 
+import { BattleHistory } from '@/components/BattleHistory/BattleHistory';
 import { Button } from '@/components/Button/Button';
 import { CommanderPanel } from '@/components/CommanderPanel/CommanderPanel';
 import { DriverTable } from '@/components/DriverTable/DriverTable';
@@ -49,6 +50,8 @@ export function RoomPage() {
     loadWave,
     deleteWave,
     renameWave,
+    startBattle,
+    deleteBattle,
   } = useRoom(pin, user?.uid, storedName);
 
   // 只有「rallying」的車頭才列入名單（指揮官關掉後不算車頭）
@@ -346,7 +349,16 @@ export function RoomPage() {
           <CommanderPanel
             meta={meta}
             canEdit={isCommander}
-            onUpdate={updateMeta}
+            onUpdate={(patch) => {
+              // 從未鎖 → 鎖定 = 啟動戰報 snapshot
+              if (patch.locked === true && !meta.locked) {
+                startBattle().catch(() =>
+                  setToast({ msg: t('error.start_battle_failed'), variant: 'error' })
+                );
+                return;
+              }
+              updateMeta(patch);
+            }}
             onSaveWave={(name) =>
               saveCurrentWave(name).catch(() =>
                 setToast({ msg: t('error.save_wave_failed'), variant: 'error' })
@@ -414,6 +426,19 @@ export function RoomPage() {
             {meta.locked && (
               <div className={styles.lockedBanner}>{t('room.locked_banner')}</div>
             )}
+
+            <BattleHistory
+              meta={meta}
+              canDelete={isCommander}
+              onDelete={(id) =>
+                deleteBattle(id).catch(() =>
+                  setToast({
+                    msg: t('error.delete_battle_failed'),
+                    variant: 'error',
+                  })
+                )
+              }
+            />
           </main>
         </div>
       </Panel>

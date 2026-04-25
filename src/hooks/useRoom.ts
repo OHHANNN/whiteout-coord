@@ -12,7 +12,14 @@ import {
 import { database } from '@/lib/firebase';
 import { logError, logInfo } from '@/lib/logger';
 
-import type { Member, MemberStatus, RoomMeta, WavePreset } from '@/types/room';
+import type {
+  BattleDriver,
+  BattleSnapshot,
+  Member,
+  MemberStatus,
+  RoomMeta,
+  WavePreset,
+} from '@/types/room';
 
 interface UseRoomState {
   loading: boolean;
@@ -42,6 +49,12 @@ interface UseRoomActions {
   deleteWave: (presetId: string) => Promise<void>;
   /** 重新命名 preset */
   renameWave: (presetId: string, name: string) => Promise<void>;
+
+  // === 戰報 ===
+  /** 鎖定 + 將當下狀態 snapshot 為一份戰報（atomic） */
+  startBattle: () => Promise<void>;
+  /** 刪除某筆戰報 */
+  deleteBattle: (battleId: string) => Promise<void>;
 }
 
 const initialState: UseRoomState = {
@@ -369,6 +382,84 @@ export function useRoom(
     }
   };
 
+  // === Battle snapshot ===
+
+  const startBattle = async () => {
+    if (!pin || !state.meta) return;
+    const battleId = `b${Date.now()}`;
+    const lockedAt = Date.now();
+
+    // 找出當前 target 對應的 wave preset 名稱（沒有就 null）
+    let waveName: string | null = null;
+    if (state.meta.wavePresets && state.meta.targetLandingAt != null) {
+      for (const id of Object.keys(state.meta.wavePresets)) {
+        const p = state.meta.wavePresets[id];
+        if (
+          p.targetLandingAt === state.meta.targetLandingAt &&
+          (p.targetLabel ?? null) === (state.meta.targetLabel ?? null)
+        ) {
+          waveName = p.name ?? null;
+          break;
+        }
+      }
+    }
+
+    // Snapshot 所有出集結車頭
+    const drivers: BattleDriver[] = Object.entries(state.members)
+      .filter(([, m]) => m.rallying !== false)
+      .map(([uid, m]) => ({
+        uid,
+        name: m.name,
+        marchSeconds: m.marchSeconds,
+        plannedLaunchAt:
+          state.meta!.targetLandingAt != null
+            ? state.meta!.targetLandingAt - m.marchSeconds * 1000
+            : null,
+        isSuicide: m.isSuicide,
+        status: m.status,
+      }));
+
+    const snapshot: BattleSnapshot = {
+      id: battleId,
+      lockedAt,
+      targetLandingAt: state.meta.targetLandingAt ?? null,
+      targetLabel: state.meta.targetLabel ?? null,
+      targetX: state.meta.targetX ?? null,
+      targetY: state.meta.targetY ?? null,
+      waveName,
+      drivers,
+    };
+
+    const order = state.meta.battleOrder ?? [];
+    try {
+      await update(ref(database), {
+        [`rooms/${pin}/meta/battles/${battleId}`]: snapshot,
+        [`rooms/${pin}/meta/battleOrder`]: [...order, battleId],
+        [`rooms/${pin}/meta/locked`]: true,
+        [`rooms/${pin}/meta/lastActivityAt`]: serverTimestamp(),
+      });
+      logInfo('useRoom · startBattle', battleId, drivers.length);
+    } catch (err) {
+      logError('useRoom · startBattle rejected', err);
+      throw err;
+    }
+  };
+
+  const deleteBattle = async (battleId: string) => {
+    if (!pin || !state.meta) return;
+    const order = state.meta.battleOrder ?? [];
+    try {
+      await update(ref(database), {
+        [`rooms/${pin}/meta/battles/${battleId}`]: null,
+        [`rooms/${pin}/meta/battleOrder`]: order.filter((id) => id !== battleId),
+        [`rooms/${pin}/meta/lastActivityAt`]: serverTimestamp(),
+      });
+    } catch (err) {
+      logError('useRoom · deleteBattle rejected', err);
+      throw err;
+    }
+  };
+
   return {
     ...state,
     updateMeta,
@@ -381,5 +472,7 @@ export function useRoom(
     loadWave,
     deleteWave,
     renameWave,
+    startBattle,
+    deleteBattle,
   };
 }
