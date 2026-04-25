@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/Button/Button';
 import { Countdown } from '@/components/Countdown';
+import { WavePresets } from '@/components/WavePresets/WavePresets';
 import { useNow } from '@/hooks/useServerTime';
 import { formatTimeInput, formatUtcTime, parseUtcTimeOfDay } from '@/lib/time';
 
@@ -14,9 +15,21 @@ interface CommanderPanelProps {
   meta: RoomMeta;
   canEdit: boolean; // 只有指揮官可以編輯
   onUpdate: (patch: Partial<RoomMeta>) => void;
+  onSaveWave: (name?: string) => void;
+  onLoadWave: (presetId: string) => void;
+  onDeleteWave: (presetId: string) => void;
+  onRenameWave: (presetId: string, name: string) => void;
 }
 
-export function CommanderPanel({ meta, canEdit, onUpdate }: CommanderPanelProps) {
+export function CommanderPanel({
+  meta,
+  canEdit,
+  onUpdate,
+  onSaveWave,
+  onLoadWave,
+  onDeleteWave,
+  onRenameWave,
+}: CommanderPanelProps) {
   const { t } = useTranslation();
   const now = useNow(1000);
 
@@ -86,6 +99,16 @@ export function CommanderPanel({ meta, canEdit, onUpdate }: CommanderPanelProps)
 
   return (
     <aside className={styles.panel}>
+      {/* === WAVES（多波預設）只有指揮官看得到 === */}
+      <WavePresets
+        meta={meta}
+        canEdit={canEdit}
+        onSave={onSaveWave}
+        onLoad={onLoadWave}
+        onDelete={onDeleteWave}
+        onRename={onRenameWave}
+      />
+
       {/* === TARGET section: 編輯控件只給指揮官、車頭看 read-only === */}
       {canEdit ? (
         <section>

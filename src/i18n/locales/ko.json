@@ -71,7 +71,14 @@
     "commander_left": "(나감)",
     "commander_offline": "오프라인",
     "confirm_remove": "「{{name}}」을(를) 방에서 내보내시겠습니까?",
-    "auto_cleaned": "5시간 이상 오프라인 상태인 리더 {{count}}명을 자동으로 정리했습니다"
+    "auto_cleaned": "5시간 이상 오프라인 상태인 리더 {{count}}명을 자동으로 정리했습니다",
+    "waves_label": "WAVES · 웨이브 프리셋",
+    "save_wave": "현재 설정을 새 웨이브로 저장",
+    "save_wave_hint": "현재 착지 시간 + 건물 + 좌표를 한 웨이브로 저장합니다",
+    "load_wave_hint": "클릭하면 이 웨이브를 불러옵니다 (더블클릭으로 이름 변경)",
+    "delete_wave_hint": "이 웨이브 프리셋 삭제",
+    "wave_double_click_hint": "클릭으로 불러오기 · 더블클릭으로 이름 변경",
+    "confirm_delete_wave": "웨이브「{{name}}」을(를) 삭제하시겠습니까?"
   },
   "error": {
     "room_not_found": "방이 존재하지 않거나 만료되었습니다",
@@ -80,6 +87,10 @@
     "firebase_missing": "Firebase 설정이 누락되었습니다",
     "transfer_failed": "이양 실패, 다시 시도해주세요",
     "remove_failed": "내보내기 실패",
+    "save_wave_failed": "웨이브 저장 실패",
+    "load_wave_failed": "웨이브 불러오기 실패",
+    "delete_wave_failed": "웨이브 삭제 실패",
+    "rename_wave_failed": "웨이브 이름 변경 실패",
     "auth_failed": "로그인 실패",
     "room_load_failed": "방 로딩 실패",
     "retry": "재시도",

@@ -45,6 +45,10 @@ export function RoomPage() {
     transferCommander,
     removeMember,
     leaveRoom,
+    saveCurrentWave,
+    loadWave,
+    deleteWave,
+    renameWave,
   } = useRoom(pin, user?.uid, storedName);
 
   // 只有「rallying」的車頭才列入名單（指揮官關掉後不算車頭）
@@ -343,6 +347,26 @@ export function RoomPage() {
             meta={meta}
             canEdit={isCommander}
             onUpdate={updateMeta}
+            onSaveWave={(name) =>
+              saveCurrentWave(name).catch(() =>
+                setToast({ msg: t('error.save_wave_failed'), variant: 'error' })
+              )
+            }
+            onLoadWave={(id) =>
+              loadWave(id).catch(() =>
+                setToast({ msg: t('error.load_wave_failed'), variant: 'error' })
+              )
+            }
+            onDeleteWave={(id) =>
+              deleteWave(id).catch(() =>
+                setToast({ msg: t('error.delete_wave_failed'), variant: 'error' })
+              )
+            }
+            onRenameWave={(id, name) =>
+              renameWave(id, name).catch(() =>
+                setToast({ msg: t('error.rename_wave_failed'), variant: 'error' })
+              )
+            }
           />
 
           <main className={styles.main}>

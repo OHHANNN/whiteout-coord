@@ -12,7 +12,7 @@ import {
 import { database } from '@/lib/firebase';
 import { logError, logInfo } from '@/lib/logger';
 
-import type { Member, MemberStatus, RoomMeta } from '@/types/room';
+import type { Member, MemberStatus, RoomMeta, WavePreset } from '@/types/room';
 
 interface UseRoomState {
   loading: boolean;
@@ -32,6 +32,16 @@ interface UseRoomActions {
   transferCommander: (newCommanderUid: string) => Promise<void>;
   removeMember: (uid: string) => Promise<void>;
   leaveRoom: () => Promise<void>;
+
+  // === 波次預設管理 ===
+  /** 把當前 target* 欄位存成新的 wave preset（自動命名 Wave N） */
+  saveCurrentWave: (name?: string) => Promise<void>;
+  /** 把指定 preset 載入當前 target*（所有人即時同步） */
+  loadWave: (presetId: string) => Promise<void>;
+  /** 刪除指定 preset */
+  deleteWave: (presetId: string) => Promise<void>;
+  /** 重新命名 preset */
+  renameWave: (presetId: string, name: string) => Promise<void>;
 }
 
 const initialState: UseRoomState = {
@@ -284,6 +294,81 @@ export function useRoom(
     }
   };
 
+  // === Wave preset actions ===
+
+  const saveCurrentWave = async (name?: string) => {
+    if (!pin || !state.meta) return;
+    const presetId = `w${Date.now()}`;
+    const order = state.meta.wavePresetOrder ?? [];
+    // Firebase 不吃 undefined，全部 ?? null 處理
+    const newPreset: WavePreset = {
+      id: presetId,
+      name: name?.trim() || `Wave ${order.length + 1}`,
+      targetLandingAt: state.meta.targetLandingAt ?? null,
+      targetLabel: state.meta.targetLabel ?? null,
+      targetX: state.meta.targetX ?? null,
+      targetY: state.meta.targetY ?? null,
+    };
+    try {
+      await update(ref(database), {
+        [`rooms/${pin}/meta/wavePresets/${presetId}`]: newPreset,
+        [`rooms/${pin}/meta/wavePresetOrder`]: [...order, presetId],
+        [`rooms/${pin}/meta/lastActivityAt`]: serverTimestamp(),
+      });
+    } catch (err) {
+      logError('useRoom · saveCurrentWave rejected', err);
+      throw err;
+    }
+  };
+
+  const loadWave = async (presetId: string) => {
+    if (!pin || !state.meta) return;
+    const preset = state.meta.wavePresets?.[presetId];
+    if (!preset) return;
+    try {
+      await update(ref(database, `rooms/${pin}/meta`), {
+        targetLandingAt: preset.targetLandingAt ?? null,
+        targetLabel: preset.targetLabel ?? null,
+        targetX: preset.targetX ?? null,
+        targetY: preset.targetY ?? null,
+        // 切換波次後解除鎖定，準備新一波
+        locked: false,
+        lastActivityAt: serverTimestamp(),
+      });
+    } catch (err) {
+      logError('useRoom · loadWave rejected', err);
+      throw err;
+    }
+  };
+
+  const deleteWave = async (presetId: string) => {
+    if (!pin || !state.meta) return;
+    const order = state.meta.wavePresetOrder ?? [];
+    try {
+      await update(ref(database), {
+        [`rooms/${pin}/meta/wavePresets/${presetId}`]: null,
+        [`rooms/${pin}/meta/wavePresetOrder`]: order.filter((id) => id !== presetId),
+        [`rooms/${pin}/meta/lastActivityAt`]: serverTimestamp(),
+      });
+    } catch (err) {
+      logError('useRoom · deleteWave rejected', err);
+      throw err;
+    }
+  };
+
+  const renameWave = async (presetId: string, name: string) => {
+    if (!pin) return;
+    try {
+      await update(
+        ref(database, `rooms/${pin}/meta/wavePresets/${presetId}`),
+        { name: name.slice(0, 40) }
+      );
+    } catch (err) {
+      logError('useRoom · renameWave rejected', err);
+      throw err;
+    }
+  };
+
   return {
     ...state,
     updateMeta,
@@ -292,5 +377,9 @@ export function useRoom(
     transferCommander,
     removeMember,
     leaveRoom,
+    saveCurrentWave,
+    loadWave,
+    deleteWave,
+    renameWave,
   };
 }

@@ -71,7 +71,14 @@
     "commander_left": "（已離開）",
     "commander_offline": "離線中",
     "confirm_remove": "確定要從房間踢除「{{name}}」？",
-    "auto_cleaned": "已自動清除 {{count}} 位離線超過 5 小時的車頭"
+    "auto_cleaned": "已自動清除 {{count}} 位離線超過 5 小時的車頭",
+    "waves_label": "WAVES · 波次預設",
+    "save_wave": "儲存當前為新波次",
+    "save_wave_hint": "把目前的目標時間 + 建築 + 座標存成一波預設",
+    "load_wave_hint": "點擊載入這波（雙擊重命名）",
+    "delete_wave_hint": "刪除這波預設",
+    "wave_double_click_hint": "點擊載入 · 雙擊重命名",
+    "confirm_delete_wave": "確定刪除波次「{{name}}」？"
   },
   "error": {
     "room_not_found": "房間不存在或已過期",
@@ -80,6 +87,10 @@
     "firebase_missing": "Firebase 設定缺失",
     "transfer_failed": "轉交失敗，請重試",
     "remove_failed": "踢除失敗",
+    "save_wave_failed": "波次儲存失敗",
+    "load_wave_failed": "波次載入失敗",
+    "delete_wave_failed": "波次刪除失敗",
+    "rename_wave_failed": "波次重命名失敗",
     "auth_failed": "登入失敗",
     "room_load_failed": "房間載入失敗",
     "retry": "重試",

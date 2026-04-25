@@ -32,6 +32,21 @@
           "lastActivityAt": {
             ".validate": "newData.isNumber()"
           },
+          "wavePresets": {
+            "$presetId": {
+              ".validate": "newData.hasChildren(['id'])",
+              "id": { ".validate": "newData.isString() && newData.val().length <= 40" },
+              "name": { ".validate": "newData.isString() && newData.val().length <= 40 || newData.val() == null" },
+              "targetLandingAt": { ".validate": "newData.isNumber() || newData.val() == null" },
+              "targetLabel": { ".validate": "newData.isString() && newData.val().length <= 40 || newData.val() == null" },
+              "targetX": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 9999 || newData.val() == null" },
+              "targetY": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 9999 || newData.val() == null" },
+              "$other": { ".validate": false }
+            }
+          },
+          "wavePresetOrder": {
+            ".validate": "newData.hasChildren() || !newData.exists()"
+          },
           "$other": { ".validate": false }
         },
 

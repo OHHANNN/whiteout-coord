@@ -71,7 +71,14 @@
     "commander_left": "(left)",
     "commander_offline": "offline",
     "confirm_remove": "Remove \"{{name}}\" from the room?",
-    "auto_cleaned": "Auto-removed {{count}} drivers offline for more than 5 hours"
+    "auto_cleaned": "Auto-removed {{count}} drivers offline for more than 5 hours",
+    "waves_label": "WAVES · PRESETS",
+    "save_wave": "Save Current as New Wave",
+    "save_wave_hint": "Save current target time + building + coords as a wave preset",
+    "load_wave_hint": "Click to load this wave (double-click to rename)",
+    "delete_wave_hint": "Delete this wave preset",
+    "wave_double_click_hint": "Click to load · Double-click to rename",
+    "confirm_delete_wave": "Delete wave \"{{name}}\"?"
   },
   "error": {
     "room_not_found": "Room not found or expired",
@@ -80,6 +87,10 @@
     "firebase_missing": "Firebase config missing",
     "transfer_failed": "Transfer failed, please retry",
     "remove_failed": "Failed to remove",
+    "save_wave_failed": "Failed to save wave",
+    "load_wave_failed": "Failed to load wave",
+    "delete_wave_failed": "Failed to delete wave",
+    "rename_wave_failed": "Failed to rename wave",
     "auth_failed": "Sign-in failed",
     "room_load_failed": "Failed to load room",
     "retry": "Retry",

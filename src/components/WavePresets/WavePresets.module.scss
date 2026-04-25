@@ -1,0 +1,127 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.title {
+  @include section-title;
+}
+
+.list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid $hud-cyan-line;
+  background: $bg-elevated;
+  transition: border-color 0.15s, background 0.15s;
+
+  &:hover {
+    border-color: $hud-cyan;
+  }
+}
+
+.pillActive {
+  border-color: $hud-cyan;
+  background: $hud-cyan-soft;
+  box-shadow: 0 0 8px rgba(0, 255, 255, 0.2);
+
+  .pillName,
+  .pillTime {
+    color: $hud-cyan;
+    text-shadow: $glow-cyan;
+  }
+}
+
+.pillBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: $font-mono;
+  font-size: 12px;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  background: $hud-cyan;
+  border-radius: 50%;
+  box-shadow: $glow-cyan;
+  flex-shrink: 0;
+}
+
+.pillName {
+  color: $text;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+}
+
+.pillTime {
+  color: $text-muted;
+  @include mono-nums;
+}
+
+.pillRemove {
+  width: 22px;
+  border: none;
+  border-left: 1px solid $hud-cyan-line;
+  background: transparent;
+  color: $text-dim;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+
+  &:hover {
+    color: $alert;
+    background: $alert-soft;
+    border-left-color: $alert;
+  }
+}
+
+.addBtn {
+  padding: 6px 12px;
+  border: 1px dashed $hud-cyan-line;
+  background: transparent;
+  color: $hud-cyan-dim;
+  font-family: $font-mono;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+
+  &:hover {
+    border-style: solid;
+    border-color: $hud-cyan;
+    color: $hud-cyan;
+    background: $hud-cyan-soft;
+    text-shadow: $glow-cyan;
+  }
+}
+
+.renameInput {
+  width: 120px;
+  height: 30px;
+  padding: 0 8px;
+  background: $bg-elevated;
+  border: 1px solid $hud-cyan;
+  font-family: $font-mono;
+  font-size: 12px;
+  color: $hud-cyan;
+  outline: none;
+}
+
+.hint {
+  font-family: $font-mono;
+  font-size: 10px;
+  color: $text-dim;
+  letter-spacing: 0.05em;
+}
