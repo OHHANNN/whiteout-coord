@@ -204,6 +204,26 @@
   text-shadow: $glow-cyan;
 }
 
+.offsetCtrl {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.offsetVal {
+  min-width: 38px;
+  text-align: center;
+  color: $text-dim;
+}
+
+.offsetActive {
+  min-width: 38px;
+  text-align: center;
+  color: $alert;
+  text-shadow: $glow-alert;
+  font-weight: 500;
+}
+
 .miniBtn {
   width: 22px;
   height: 22px;

@@ -45,6 +45,7 @@
     "col_driver": "車頭",
     "col_march": "行軍",
     "col_rally": "集結",
+    "col_offset": "偏移",
     "col_launch": "發車 · UTC",
     "col_arrival": "落地 · UTC",
     "col_until_launch": "距發車",

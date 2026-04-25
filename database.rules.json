@@ -87,6 +87,9 @@
             "rallyWindowSeconds": {
               ".validate": "newData.isNumber() && (newData.val() == 300 || newData.val() == 600) || newData.val() == null"
             },
+            "landingOffsetSeconds": {
+              ".validate": "newData.isNumber() && newData.val() >= -60 && newData.val() <= 60 || newData.val() == null"
+            },
             "$other": { ".validate": false }
           }
         },

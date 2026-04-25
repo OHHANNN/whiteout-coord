@@ -74,10 +74,11 @@ export function RoomPage() {
 
   // === 以下 hook 必須在所有 early return 之前呼叫（React rules of hooks）===
   const me = user?.uid ? members[user.uid] : null;
-  // 發車 = 落地時間 − 行軍 − 集結窗口
+  // 發車 = 目標落地 + 偏移 − 行軍 − 集結
   const myLaunchAtMs =
     me && me.rallying !== false && meta?.targetLandingAt != null
-      ? meta.targetLandingAt -
+      ? meta.targetLandingAt +
+        (me.landingOffsetSeconds ?? 0) * 1000 -
         (me.marchSeconds + (me.rallyWindowSeconds ?? 300)) * 1000
       : null;
   useLaunchAlert(myLaunchAtMs, !muted);
@@ -308,6 +309,15 @@ export function RoomPage() {
     }
   };
 
+  const handleSetOffset = (targetUid: string, seconds: number) => {
+    const next = Math.max(-60, Math.min(60, Math.round(seconds)));
+    if (targetUid === user?.uid) {
+      updateMyMember({ landingOffsetSeconds: next });
+    } else if (isCommander) {
+      updateMember(targetUid, { landingOffsetSeconds: next });
+    }
+  };
+
   const handleTransferCommander = async (targetUid: string, targetName: string) => {
     const ok = await confirm({
       message: t('room.confirm_transfer', { name: targetName }),
@@ -492,6 +502,7 @@ export function RoomPage() {
               onSetMarch={handleSetMarch}
               onSetSuicide={handleSetSuicide}
               onSetRally={handleSetRally}
+              onSetOffset={handleSetOffset}
               onRemove={handleRemoveMember}
               onTransferCommander={
                 isCommander ? handleTransferCommander : undefined

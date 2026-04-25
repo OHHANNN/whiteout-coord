@@ -45,6 +45,7 @@
     "col_driver": "리더",
     "col_march": "행군",
     "col_rally": "집결",
+    "col_offset": "오프셋",
     "col_launch": "출발 · UTC",
     "col_arrival": "착지 · UTC",
     "col_until_launch": "출발까지",

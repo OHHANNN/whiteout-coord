@@ -94,6 +94,13 @@ export interface Member {
    * 缺欄位時預設 300。
    */
   rallyWindowSeconds?: number;
+  /**
+   * 落地偏移（秒）。預設 0 = 跟主目標同時落地。
+   * 負值 = 提前落地（首發車吸盾 -2s）；正值 = 延後落地。
+   * 實際落地 = target_landing + landingOffsetSeconds
+   * 發車   = target_landing + landingOffsetSeconds − march − rally
+   */
+  landingOffsetSeconds?: number;
 }
 
 export interface Room {
@@ -113,13 +120,26 @@ export interface DriverView {
 
 /**
  * 統一計算車頭的「按下發動集結」時刻。
- * launch = target_landing − march − rally_window
+ * launch = target_landing + landingOffset − march − rally_window
  */
 export function getLaunchAtMs(
   targetLandingAt: number | null | undefined,
-  member: Pick<Member, 'marchSeconds' | 'rallyWindowSeconds'> | null | undefined
+  member:
+    | Pick<Member, 'marchSeconds' | 'rallyWindowSeconds' | 'landingOffsetSeconds'>
+    | null
+    | undefined
 ): number | null {
   if (targetLandingAt == null || !member) return null;
   const rally = member.rallyWindowSeconds ?? 300;
-  return targetLandingAt - (member.marchSeconds + rally) * 1000;
+  const offset = member.landingOffsetSeconds ?? 0;
+  return targetLandingAt + offset * 1000 - (member.marchSeconds + rally) * 1000;
+}
+
+/** 該車頭實際落地時刻（含偏移） */
+export function getArrivalAtMs(
+  targetLandingAt: number | null | undefined,
+  member: Pick<Member, 'landingOffsetSeconds'> | null | undefined
+): number | null {
+  if (targetLandingAt == null || !member) return null;
+  return targetLandingAt + (member.landingOffsetSeconds ?? 0) * 1000;
 }

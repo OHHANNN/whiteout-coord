@@ -45,6 +45,7 @@
     "col_driver": "Driver",
     "col_march": "March",
     "col_rally": "Rally",
+    "col_offset": "Offset",
     "col_launch": "Launch · UTC",
     "col_arrival": "Arrival · UTC",
     "col_until_launch": "Until Launch",

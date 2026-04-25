@@ -16,6 +16,7 @@ interface DriverTableProps {
   onSetMarch: (uid: string, seconds: number) => void;
   onSetSuicide: (uid: string, value: boolean) => void;
   onSetRally: (uid: string, seconds: number) => void;
+  onSetOffset: (uid: string, seconds: number) => void;
   onRemove: (uid: string) => void;
   onTransferCommander?: (uid: string, name: string) => void;
   canRemove: boolean;
@@ -138,6 +139,7 @@ export function DriverTable({
   onSetMarch,
   onSetSuicide,
   onSetRally,
+  onSetOffset,
   onRemove,
   onTransferCommander,
   canRemove,
@@ -158,6 +160,7 @@ export function DriverTable({
           <th>{t('room.col_driver')}</th>
           <th>{t('room.col_march')}</th>
           <th>{t('room.col_rally')}</th>
+          <th>{t('room.col_offset')}</th>
           <th>{t('room.col_launch')}</th>
           <th>{t('room.col_until_launch')}</th>
           <th>{t('room.col_status')}</th>
@@ -244,6 +247,37 @@ export function DriverTable({
                 )}
               </td>
 
+              <td className={styles.mono} data-label={t('room.col_offset')}>
+                {(() => {
+                  const offset = member.landingOffsetSeconds ?? 0;
+                  const display = offset === 0 ? '0s' : offset > 0 ? `+${offset}s` : `${offset}s`;
+                  if (!canEditThisMarch) {
+                    return <span className={offset !== 0 ? styles.offsetActive : ''}>{display}</span>;
+                  }
+                  return (
+                    <div className={styles.offsetCtrl}>
+                      <button
+                        type="button"
+                        className={styles.miniBtn}
+                        onClick={() => onSetOffset(uid, offset - 1)}
+                      >
+                        −
+                      </button>
+                      <span className={offset !== 0 ? styles.offsetActive : styles.offsetVal}>
+                        {display}
+                      </span>
+                      <button
+                        type="button"
+                        className={styles.miniBtn}
+                        onClick={() => onSetOffset(uid, offset + 1)}
+                      >
+                        +
+                      </button>
+                    </div>
+                  );
+                })()}
+              </td>
+
               <td
                 className={`${styles.mono} ${styles.launch}`}
                 data-label={t('room.col_launch')}
@@ -293,7 +327,7 @@ export function DriverTable({
         })}
         {rows.length === 0 && (
           <tr>
-            <td colSpan={6} className={styles.empty}>
+            <td colSpan={7} className={styles.empty}>
               No drivers yet · 尚無車頭
             </td>
           </tr>
