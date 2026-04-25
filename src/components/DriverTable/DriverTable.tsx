@@ -19,6 +19,7 @@ interface DriverTableProps {
   onSetRally: (uid: string, seconds: number) => void;
   onSetOffset: (uid: string, seconds: number) => void;
   onSetType: (uid: string, type: 'driver' | 'passenger') => void;
+  onSetCounterRally: (uid: string, value: boolean) => void;
   onRemove: (uid: string) => void;
   onTransferCommander?: (uid: string, name: string) => void;
   canRemove: boolean;
@@ -27,7 +28,8 @@ interface DriverTableProps {
 
 function buildView(
   members: Record<string, Member>,
-  targetLandingAt: number | null
+  targetLandingAt: number | null,
+  myUid: string
 ): DriverView[] {
   return Object.entries(members)
     .map(([uid, member]) => {
@@ -41,7 +43,11 @@ function buildView(
       };
     })
     .sort((a, b) => {
-      // Suicide 永遠排最上面
+      // 自己永遠排在最上面（不會被首發 / 行軍排序蓋掉，最關鍵的「我的距發車」要一眼可見）
+      if ((a.uid === myUid) !== (b.uid === myUid)) {
+        return a.uid === myUid ? -1 : 1;
+      }
+      // Suicide 其次
       if (a.member.isSuicide !== b.member.isSuicide) {
         return a.member.isSuicide ? -1 : 1;
       }
@@ -144,6 +150,7 @@ export function DriverTable({
   onSetRally,
   onSetOffset,
   onSetType,
+  onSetCounterRally,
   onRemove,
   onTransferCommander,
   canRemove,
@@ -153,11 +160,12 @@ export function DriverTable({
   const now = useNow(1000);
 
   const rows = useMemo(
-    () => buildView(members, meta.targetLandingAt),
-    [members, meta.targetLandingAt]
+    () => buildView(members, meta.targetLandingAt, myUid),
+    [members, meta.targetLandingAt, myUid]
   );
 
   return (
+    <div className={styles.tableWrap}>
     <table className={styles.table}>
       <thead>
         <tr>
@@ -189,15 +197,25 @@ export function DriverTable({
                     ? styles.warning
                     : '';
 
+          const isCounterRally = member.counterRally === true;
+          const canEditThisRow = !meta.locked && (isMe || canEditOthers);
           return (
-            <tr key={uid} className={isMe ? styles.self : ''}>
+            <tr
+              key={uid}
+              className={`${isMe ? styles.self : ''} ${
+                isCounterRally ? styles.counterRally : ''
+              }`}
+            >
               <td data-label={t('room.col_driver')}>
-                <span className={styles.name}>{member.name}</span>
-                {member.role === 'commander' && (
-                  <span className={styles.chip}>{t('room.commander')}</span>
-                )}
+                <div className={styles.driverInfo}>
+                  <span className={styles.name} title={member.name}>
+                    {member.name}
+                  </span>
+                  {member.role === 'commander' && (
+                    <span className={styles.chip}>{t('room.commander')}</span>
+                  )}
                 {/* SUICIDE：可編輯時顯示 toggle button、不可編輯但已是首發車時顯示靜態 chip */}
-                {!meta.locked && (isMe || canEditOthers) ? (
+                {canEditThisRow ? (
                   <button
                     type="button"
                     className={`${styles.suicideBtn} ${
@@ -220,6 +238,13 @@ export function DriverTable({
                     </span>
                   )
                 )}
+                  {/* 反集結：純標記顯示（在 ⋯ menu 裡切換） */}
+                  {isCounterRally && (
+                    <span className={styles.counterRallyTag}>
+                      ⚡ {t('room.counter_rally')}
+                    </span>
+                  )}
+                </div>
               </td>
 
               <MarchCell
@@ -308,6 +333,16 @@ export function DriverTable({
                   </span>
                   {(() => {
                     const items: ActionItem[] = [];
+                    // 自己 / commander 都可以切換 反集結 標記
+                    if (canEditThisRow) {
+                      items.push({
+                        label: isCounterRally
+                          ? t('room.unset_counter_rally')
+                          : t('room.set_counter_rally'),
+                        icon: '⚡',
+                        onSelect: () => onSetCounterRally(uid, !isCounterRally),
+                      });
+                    }
                     // 自己 / commander 都可以把這位車頭降為車身
                     if (isMe || canEditOthers) {
                       items.push({
@@ -347,5 +382,6 @@ export function DriverTable({
         )}
       </tbody>
     </table>
+    </div>
   );
 }

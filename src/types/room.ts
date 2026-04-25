@@ -112,6 +112,11 @@ export interface Member {
    * 'passenger' = 車身，只加入別人的集結，不出現在車頭名單。
    */
   participantType?: ParticipantType;
+  /**
+   * 是否被標記為「可以開反集結」。多聯盟協同時用：只有沒在王城裡的人可以開反集結。
+   * 純標記用、不影響時間計算；勾選後整列背景變色提醒 commander。
+   */
+  counterRally?: boolean;
 }
 
 export interface Room {

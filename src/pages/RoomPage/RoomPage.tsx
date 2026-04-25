@@ -355,6 +355,14 @@ export function RoomPage() {
     }
   };
 
+  const handleSetCounterRally = (targetUid: string, value: boolean) => {
+    if (targetUid === user?.uid) {
+      updateMyMember({ counterRally: value });
+    } else if (isCommander) {
+      updateMember(targetUid, { counterRally: value });
+    }
+  };
+
   const handleTransferCommander = async (targetUid: string, targetName: string) => {
     const ok = await confirm({
       message: t('room.confirm_transfer', { name: targetName }),
@@ -541,6 +549,7 @@ export function RoomPage() {
               onSetRally={handleSetRally}
               onSetOffset={handleSetOffset}
               onSetType={handleSetType}
+              onSetCounterRally={handleSetCounterRally}
               onRemove={handleRemoveMember}
               onTransferCommander={
                 isCommander ? handleTransferCommander : undefined

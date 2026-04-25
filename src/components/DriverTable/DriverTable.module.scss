@@ -1,5 +1,28 @@
+// 桌機在 panel 寬度不夠時改成橫向捲動，避免 row 直接撐爆容器
+.tableWrap {
+  width: 100%;
+  overflow-x: auto;
+  // overflow-y: clip 讓 thead 的 position: sticky 釘到 viewport（頁面捲動）
+  // 而不是釘到這個 wrap，因為 wrap 本身不需要 vertical scroll
+  overflow-y: clip;
+  // 自訂 HUD 風格 scrollbar
+  &::-webkit-scrollbar {
+    height: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: rgba(0, 255, 255, 0.04);
+  }
+  &::-webkit-scrollbar-thumb {
+    background: $hud-cyan-line;
+    &:hover {
+      background: $hud-cyan-dim;
+    }
+  }
+}
+
 .table {
   width: 100%;
+  min-width: 720px; // 七欄擠不下時就讓 wrap 觸發捲動
   border-collapse: collapse;
   font-family: $font-mono;
   font-size: 12px;
@@ -14,6 +37,13 @@
     letter-spacing: 0.2em;
     text-transform: uppercase;
     border-bottom: 1px solid $hud-cyan-line;
+    white-space: nowrap; // 避免欄位標題斷行
+    // 多車頭時 vertical scroll header 不消失
+    // 用 rgb 不透明色避免捲過去的 row tint 從底下透出來
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: rgb(6, 14, 28);
   }
 
   td {
@@ -29,13 +59,53 @@
   }
 }
 
+// 名字 + 標籤改用 flex 排版、有一致的間距
+.driverInfo {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  row-gap: 6px;
+  min-width: 0; // 讓 .name 的 ellipsis 能生效
+}
+
+// 自己那列：跟反集結一樣用單一純色 + 第一格紅色直條（連續、不再切格）
 .self {
   td {
-    background: linear-gradient(90deg, rgba(255, 59, 59, 0.08), transparent 60%);
+    background: rgba(255, 59, 59, 0.09);
+  }
+  td:first-child {
+    box-shadow: inset 4px 0 0 $alert;
+  }
+}
+
+// 反集結 row：整列連續黃色 tint + 第一格左邊一條黃色直條當記號
+.counterRally {
+  td {
+    background: rgba(255, 176, 32, 0.12);
+  }
+  td:first-child {
+    box-shadow: inset 4px 0 0 $warning;
+  }
+}
+
+// self + counter-rally 同時：純粹用黃色（counter-rally 優先級高、不再額外加紅框避免「框中框」感）
+.self.counterRally {
+  td {
+    background: rgba(255, 176, 32, 0.13);
+  }
+  td:first-child {
+    box-shadow: inset 4px 0 0 $warning;
   }
 }
 
 .name {
+  display: inline-block;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
   color: $text;
   font-family: $font-sans;
   font-weight: 500;
@@ -78,16 +148,31 @@
   }
 }
 
+// 反集結：純標記顯示（toggle 已移到 ⋯ menu）
+.counterRallyTag {
+  display: inline-block;
+  padding: 2px 8px;
+  font-family: $font-mono;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  border: 1px solid $warning;
+  color: $warning;
+  background: rgba(255, 176, 32, 0.15);
+  text-shadow: $glow-warning;
+  white-space: nowrap;
+}
+
+// chip 統一不再用 margin、靠 .driverInfo 的 gap 控制間距
 .chip,
 .suicide {
   display: inline-block;
-  margin-left: 8px;
   padding: 2px 8px;
   font-family: $font-mono;
   font-size: 10px;
   letter-spacing: 0.1em;
   border: 1px solid $hud-cyan-line;
   color: $hud-cyan;
+  white-space: nowrap;
 }
 
 .suicide {
@@ -113,11 +198,13 @@
   letter-spacing: 0.04em;
 }
 
-// 自己那列的距發車：再放大一階 + 加粗，戰況中一眼掃到
+// 自己那列的距發車：純粹放大字級 + 青色，沒有 border 沒有 glow → 最高可讀性
+// warning / danger / launched 的顏色會在後面定義、優先級壓過這裡的 cyan
 .untilSelf {
-  font-size: 22px;
+  font-size: 28px;
   font-weight: 700;
   letter-spacing: 0.05em;
+  color: $hud-cyan;
 }
 
 .warning {
@@ -292,8 +379,19 @@
 
 // Mobile: 折成 compact card
 @include tablet-down {
+  .tableWrap {
+    overflow-x: visible;
+    overflow-y: visible;
+  }
+
   .table {
     display: block;
+    min-width: 0;
+
+    // mobile thead 是 display:none、不需要 sticky，但保險起見把 sticky 拿掉避免被殘留樣式吃到
+    th {
+      position: static;
+    }
 
     thead {
       display: none;
@@ -395,10 +493,16 @@
       font-size: 14px;
     }
 
-    // 手機上自己那列的距發車再大一階（壓過上面的 .mono 14px）
+    // 手機上自己那列的距發車再大一階 + 跨整列（不要靠左只佔一格）
     .untilSelf {
-      font-size: 26px;
+      grid-column: 1 / -1; // 整張 card 兩欄都吃滿
+      font-size: 36px;
       font-weight: 700;
+      align-items: center;
+      // 標籤（距發車）置中、值也置中：手機 card 較大字級才有氣勢
+      &::before {
+        font-size: 10px;
+      }
     }
   }
 }

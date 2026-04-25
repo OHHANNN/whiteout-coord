@@ -164,6 +164,7 @@ export function useRoom(
             rallyWindowSeconds: 300,
             landingOffsetSeconds: 0,
             participantType: initialType,
+            counterRally: false,
           };
           await set(ref(database, `rooms/${pin}`), {
             meta,
@@ -193,6 +194,7 @@ export function useRoom(
             rallyWindowSeconds: existingMember?.rallyWindowSeconds ?? 300,
             landingOffsetSeconds: existingMember?.landingOffsetSeconds ?? 0,
             participantType: existingMember?.participantType ?? initialType,
+            counterRally: existingMember?.counterRally ?? false,
           };
           await set(myRef, member);
           if (cancelled) return;

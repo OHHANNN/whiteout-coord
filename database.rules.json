@@ -93,6 +93,9 @@
             "participantType": {
               ".validate": "newData.val() == 'driver' || newData.val() == 'passenger' || newData.val() == null"
             },
+            "counterRally": {
+              ".validate": "newData.isBoolean() || newData.val() == null"
+            },
             "$other": { ".validate": false }
           }
         },
