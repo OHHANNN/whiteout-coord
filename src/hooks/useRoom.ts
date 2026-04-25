@@ -233,6 +233,45 @@ export function useRoom(
     };
   }, [pin, uid]);
 
+  // ---------- 連線恢復時重新註冊 onDisconnect ----------
+  // Firebase 的 onDisconnect 只 fire 一次，斷線重連後會被清空。
+  // 必須在每次 reconnect 後重新註冊、不然下次真的關 tab 不會標 offline。
+  useEffect(() => {
+    if (!pin || !uid) return;
+    const connectedRef = ref(database, '.info/connected');
+    const myRef = ref(database, `rooms/${pin}/members/${uid}`);
+
+    // 只在「曾經斷線過 → 又連上」時動作。避免初次連線觸發。
+    let seenDisconnect = false;
+
+    const unsub = onValue(connectedRef, (snap) => {
+      const isConnected = snap.val() === true;
+      if (!isConnected) {
+        seenDisconnect = true;
+        return;
+      }
+      // isConnected === true
+      if (!seenDisconnect) return; // 初次連線（非 reconnect）
+      if (!joinedRef.current) return; // 還沒 join 完成
+      seenDisconnect = false;
+
+      logInfo('useRoom · reconnected · re-registering onDisconnect');
+      onDisconnect(myRef).update({
+        status: 'offline' satisfies MemberStatus,
+        lastSeen: serverTimestamp(),
+      });
+      // 把自己狀態恢復成 ready（前一輪的 onDisconnect 把我設成 offline 了）
+      update(myRef, {
+        status: 'ready' satisfies MemberStatus,
+        lastSeen: serverTimestamp(),
+      }).catch(() => {
+        /* noop */
+      });
+    });
+
+    return () => unsub();
+  }, [pin, uid]);
+
   // ---------- actions ----------
   const updateMeta = async (patch: Partial<RoomMeta>) => {
     if (!pin) return;
