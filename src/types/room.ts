@@ -27,8 +27,12 @@ export interface BattleDriver {
   uid: string;
   name: string;
   marchSeconds: number;
-  /** 計算後的發車時間 */
+  /** 集結窗口長度（秒）。舊戰報沒這欄位 → 預設 300 */
+  rallyWindowSeconds?: number;
+  /** 計算後的發車時間 (= 落地 − 行軍 − 集結) */
   plannedLaunchAt: number | null;
+  /** 預計落地時間 (= 房間 targetLandingAt，未來若加 suicide offset 可在這設不同值) */
+  arrivalAtMs?: number | null;
   isSuicide: boolean;
   /** 鎖定那一刻的狀態 */
   status: MemberStatus;

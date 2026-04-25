@@ -252,7 +252,7 @@ export function DriverTable({
               </td>
 
               <td
-                className={`${styles.mono} ${untilLaunchClass}`}
+                className={`${styles.mono} ${styles.untilCell} ${isMe ? styles.untilSelf : ''} ${untilLaunchClass}`}
                 data-label={t('room.col_until_launch')}
               >
                 {untilLaunchSec == null

@@ -80,7 +80,8 @@ export function WavePresets({
   return (
     <section className={styles.section}>
       <div className={styles.title}>{t('room.waves_label')}</div>
-      <div className={styles.list}>
+      <div className={styles.scrollWrap}>
+        <div className={styles.list}>
         {presets.map((preset) => {
           const active = isActive(preset);
           const time = preset.targetLandingAt
@@ -146,17 +147,18 @@ export function WavePresets({
             </div>
           );
         })}
-        {canEdit && (
-          <button
-            type="button"
-            className={styles.addBtn}
-            onClick={() => onSave()}
-            title={t('room.save_wave_hint')}
-          >
-            + {t('room.save_wave')}
-          </button>
-        )}
+        </div>
       </div>
+      {canEdit && (
+        <button
+          type="button"
+          className={styles.addBtn}
+          onClick={() => onSave()}
+          title={t('room.save_wave_hint')}
+        >
+          + {t('room.save_wave')}
+        </button>
+      )}
       {canEdit && presets.length > 0 && (
         <div className={styles.hint}>{t('room.wave_double_click_hint')}</div>
       )}

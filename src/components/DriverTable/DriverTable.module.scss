@@ -106,6 +106,20 @@
   font-weight: 500;
 }
 
+// 距發車：對車頭來說是最關鍵的資訊、整欄字級放大
+.untilCell {
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+
+// 自己那列的距發車：再放大一階 + 加粗，戰況中一眼掃到
+.untilSelf {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
 .warning {
   color: $warning;
   text-shadow: $glow-warning;
@@ -389,6 +403,12 @@
     .launch,
     .mono {
       font-size: 14px;
+    }
+
+    // 手機上自己那列的距發車再大一階（壓過上面的 .mono 14px）
+    .untilSelf {
+      font-size: 26px;
+      font-weight: 700;
     }
   }
 }

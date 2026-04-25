@@ -116,7 +116,9 @@ export function BattleHistory({ meta, canDelete, onDelete }: BattleHistoryProps)
                         <tr>
                           <th>{t('room.col_driver')}</th>
                           <th>{t('room.col_march')}</th>
+                          <th>{t('room.col_rally')}</th>
                           <th>{t('room.col_launch')}</th>
+                          <th>{t('room.col_arrival')}</th>
                           <th>{t('room.col_status')}</th>
                         </tr>
                       </thead>
@@ -128,32 +130,42 @@ export function BattleHistory({ meta, canDelete, onDelete }: BattleHistoryProps)
                             }
                             return b.marchSeconds - a.marchSeconds;
                           })
-                          .map((d) => (
-                            <tr key={d.uid}>
-                              <td>
-                                <span className={styles.driverName}>{d.name}</span>
-                                {d.isSuicide && (
-                                  <span className={styles.suicide}>SUICIDE</span>
-                                )}
-                              </td>
-                              <td className={styles.mono}>
-                                {formatDuration(d.marchSeconds)}
-                              </td>
-                              <td className={styles.mono}>
-                                {d.plannedLaunchAt
-                                  ? formatUtcTime(d.plannedLaunchAt)
-                                  : '--:--:--'}
-                              </td>
-                              <td>
-                                <span
-                                  className={`${styles.status} ${styles[d.status]}`}
-                                >
-                                  ●{' '}
-                                  {t(`room.status_${d.status}`)}
-                                </span>
-                              </td>
-                            </tr>
-                          ))}
+                          .map((d) => {
+                            const rally = d.rallyWindowSeconds ?? 300;
+                            // 舊戰報沒存 arrivalAtMs → fallback 到房間 target
+                            const arrival = d.arrivalAtMs ?? battle.targetLandingAt;
+                            return (
+                              <tr key={d.uid}>
+                                <td>
+                                  <span className={styles.driverName}>{d.name}</span>
+                                  {d.isSuicide && (
+                                    <span className={styles.suicide}>
+                                      {t('room.role_suicide')}
+                                    </span>
+                                  )}
+                                </td>
+                                <td className={styles.mono}>
+                                  {formatDuration(d.marchSeconds)}
+                                </td>
+                                <td className={styles.mono}>{rally / 60}m</td>
+                                <td className={styles.mono}>
+                                  {d.plannedLaunchAt
+                                    ? formatUtcTime(d.plannedLaunchAt)
+                                    : '--:--:--'}
+                                </td>
+                                <td className={`${styles.mono} ${styles.arrival}`}>
+                                  {arrival ? formatUtcTime(arrival) : '--:--:--'}
+                                </td>
+                                <td>
+                                  <span
+                                    className={`${styles.status} ${styles[d.status]}`}
+                                  >
+                                    ● {t(`room.status_${d.status}`)}
+                                  </span>
+                                </td>
+                              </tr>
+                            );
+                          })}
                       </tbody>
                     </table>
 

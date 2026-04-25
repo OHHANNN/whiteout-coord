@@ -8,11 +8,39 @@
   @include section-title;
 }
 
+// 捲動容器：超過 5-6 個 wave 時就出現自訂捲軸、不會把 sidebar 撐爆
+.scrollWrap {
+  max-height: 252px; // 約 5 個 pill 高度
+  overflow-y: auto;
+  margin-right: -4px; // 留空間給捲軸、避免 pill 跟捲軸貼太近
+
+  // Firefox
+  scrollbar-width: thin;
+  scrollbar-color: $hud-cyan-line transparent;
+
+  // Webkit (Chrome / Safari)
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: rgba(0, 255, 255, 0.04);
+  }
+  &::-webkit-scrollbar-thumb {
+    background: $hud-cyan-line;
+    border-radius: 0;
+
+    &:hover {
+      background: $hud-cyan;
+    }
+  }
+}
+
 .list {
   display: flex;
   flex-direction: column;
   gap: 6px;
   align-items: stretch;
+  padding-right: 4px; // 跟 scrollWrap 的 negative margin 對沖
 }
 
 .pill {
@@ -111,7 +139,7 @@
 }
 
 .addBtn {
-  align-self: stretch;
+  width: 100%;
   padding: 8px 12px;
   border: 1px dashed $hud-cyan-line;
   background: transparent;

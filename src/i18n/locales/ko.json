@@ -46,6 +46,7 @@
     "col_march": "행군",
     "col_rally": "집결",
     "col_launch": "출발 · UTC",
+    "col_arrival": "착지 · UTC",
     "col_until_launch": "출발까지",
     "col_status": "상태",
     "role_suicide": "선봉대",

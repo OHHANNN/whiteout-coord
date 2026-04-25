@@ -368,10 +368,22 @@ export function useRoom(
     if (!pin || !state.meta) return;
     const presetId = `w${Date.now()}`;
     const order = state.meta.wavePresetOrder ?? [];
+    const presets = state.meta.wavePresets;
+
+    // 找已存在 "Wave N" 名稱裡最大的 N、新 wave = N+1
+    // 避免刪掉中間或末端後新增的撞號
+    const usedNumbers = presets
+      ? Object.values(presets).map((p) => {
+          const match = /^Wave\s+(\d+)$/i.exec(p.name ?? '');
+          return match ? Number(match[1]) : 0;
+        })
+      : [];
+    const nextNumber = Math.max(0, ...usedNumbers) + 1;
+
     // Firebase 不吃 undefined，全部 ?? null 處理
     const newPreset: WavePreset = {
       id: presetId,
-      name: name?.trim() || `Wave ${order.length + 1}`,
+      name: name?.trim() || `Wave ${nextNumber}`,
       targetLandingAt: state.meta.targetLandingAt ?? null,
       targetLabel: state.meta.targetLabel ?? null,
       targetX: state.meta.targetX ?? null,
@@ -464,14 +476,15 @@ export function useRoom(
       .filter(([, m]) => m.rallying !== false)
       .map(([uid, m]) => {
         const rally = m.rallyWindowSeconds ?? 300;
+        const targetAt = state.meta!.targetLandingAt;
         return {
           uid,
           name: m.name,
           marchSeconds: m.marchSeconds,
+          rallyWindowSeconds: rally,
           plannedLaunchAt:
-            state.meta!.targetLandingAt != null
-              ? state.meta!.targetLandingAt - (m.marchSeconds + rally) * 1000
-              : null,
+            targetAt != null ? targetAt - (m.marchSeconds + rally) * 1000 : null,
+          arrivalAtMs: targetAt ?? null,
           isSuicide: m.isSuicide,
           status: m.status,
         };

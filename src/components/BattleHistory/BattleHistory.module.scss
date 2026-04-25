@@ -192,6 +192,12 @@
   @include mono-nums;
 }
 
+.arrival {
+  color: $hud-cyan;
+  text-shadow: $glow-cyan;
+  font-weight: 500;
+}
+
 .status {
   font-size: 11px;
 
