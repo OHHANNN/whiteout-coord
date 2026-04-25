@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/Button/Button';
 import { Countdown } from '@/components/Countdown';
 import { useNow } from '@/hooks/useServerTime';
-import { formatUtcTime, parseUtcTimeOfDay } from '@/lib/time';
+import { formatTimeInput, formatUtcTime, parseUtcTimeOfDay } from '@/lib/time';
 
 import type { RoomMeta } from '@/types/room';
 
@@ -82,76 +82,82 @@ export function CommanderPanel({ meta, canEdit, onUpdate }: CommanderPanelProps)
     });
   };
 
+  const hasObjective = !!(meta.targetLabel || meta.targetX != null || meta.targetY != null);
+
   return (
     <aside className={styles.panel}>
-      <section>
-        <div className={styles.title}>{t('room.target_landing')}</div>
-        <div className={styles.controls}>
-          <div className={styles.timeInputRow}>
-            <input
-              className={styles.timeInput}
-              value={timeInput}
-              placeholder="HH:MM:SS (UTC)"
-              onChange={(e) => setTimeInput(e.target.value)}
-              onBlur={() => commitTime(timeInput)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  (e.target as HTMLInputElement).blur();
-                }
-              }}
-              disabled={!canEdit || meta.locked}
-            />
-            {meta.targetLandingAt != null && canEdit && !meta.locked && (
-              <button
-                type="button"
-                className={styles.clearBtn}
-                onClick={() => {
-                  setTimeInput('');
-                  onUpdate({ targetLandingAt: null });
+      {/* === TARGET section: 編輯控件只給指揮官、車頭看 read-only === */}
+      {canEdit ? (
+        <section>
+          <div className={styles.title}>{t('room.target_landing')}</div>
+          <div className={styles.controls}>
+            <div className={styles.timeInputRow}>
+              <input
+                className={styles.timeInput}
+                value={timeInput}
+                placeholder="HH:MM:SS (UTC)"
+                inputMode="numeric"
+                maxLength={8}
+                onChange={(e) => setTimeInput(formatTimeInput(e.target.value))}
+                onBlur={() => commitTime(timeInput)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    (e.target as HTMLInputElement).blur();
+                  }
                 }}
-                title="清除目標時間"
-                aria-label="clear target time"
-              >
-                ×
-              </button>
-            )}
+                disabled={meta.locked}
+              />
+              {meta.targetLandingAt != null && !meta.locked && (
+                <button
+                  type="button"
+                  className={styles.clearBtn}
+                  onClick={() => {
+                    setTimeInput('');
+                    onUpdate({ targetLandingAt: null });
+                  }}
+                  title={t('room.clear_target')}
+                  aria-label="clear target time"
+                >
+                  ×
+                </button>
+              )}
+            </div>
+            <div className={styles.btnRow}>
+              {[-10, -1, 1, 10].map((d) => (
+                <button
+                  key={d}
+                  type="button"
+                  className={styles.chip}
+                  onClick={() => nudgeTime(d)}
+                  disabled={meta.locked || meta.targetLandingAt == null}
+                >
+                  {d > 0 ? `+${d}s` : `${d}s`}
+                </button>
+              ))}
+            </div>
+            <div className={styles.btnRow}>
+              {[
+                { label: '+5m', sec: 5 * 60 },
+                { label: '+10m', sec: 10 * 60 },
+                { label: '+30m', sec: 30 * 60 },
+                { label: '+1h', sec: 60 * 60 },
+              ].map(({ label, sec }) => (
+                <button
+                  key={label}
+                  type="button"
+                  className={styles.chip}
+                  onClick={() => setRelative(sec)}
+                  disabled={meta.locked}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className={styles.btnRow}>
-            {[-10, -1, 1, 10].map((d) => (
-              <button
-                key={d}
-                type="button"
-                className={styles.chip}
-                onClick={() => nudgeTime(d)}
-                disabled={!canEdit || meta.locked || meta.targetLandingAt == null}
-                title="微調 ± 秒數"
-              >
-                {d > 0 ? `+${d}s` : `${d}s`}
-              </button>
-            ))}
-          </div>
-          <div className={styles.btnRow}>
-            {[
-              { label: '+5m', sec: 5 * 60 },
-              { label: '+10m', sec: 10 * 60 },
-              { label: '+30m', sec: 30 * 60 },
-              { label: '+1h', sec: 60 * 60 },
-            ].map(({ label, sec }) => (
-              <button
-                key={label}
-                type="button"
-                className={styles.chip}
-                onClick={() => setRelative(sec)}
-                disabled={!canEdit || meta.locked}
-                title="從現在起 N 分/時後落地"
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </section>
+        </section>
+      ) : null}
 
+      {/* === T-MINUS（所有人都看得到） === */}
       <section>
         <div className={styles.title}>{t('room.t_minus')}</div>
         <Countdown
@@ -159,7 +165,7 @@ export function CommanderPanel({ meta, canEdit, onUpdate }: CommanderPanelProps)
           label={t('room.all_land_sim')}
           size="lg"
         />
-        {meta.targetLandingAt != null && (
+        {meta.targetLandingAt != null ? (
           <div className={styles.targetInfo}>
             @ {formatUtcTime(meta.targetLandingAt)} UTC
             {meta.targetLandingAt - now > 24 * 3600 * 1000 && (
@@ -172,39 +178,60 @@ export function CommanderPanel({ meta, canEdit, onUpdate }: CommanderPanelProps)
               </span>
             )}
           </div>
+        ) : (
+          !canEdit && (
+            <div className={styles.targetInfo}>{t('room.waiting_target')}</div>
+          )
         )}
       </section>
 
-      <section>
-        <div className={styles.title}>{t('room.objective')}</div>
-        <input
-          className={styles.input}
-          value={label}
-          placeholder="王城城門 · MAIN GATE"
-          onChange={(e) => setLabel(e.target.value)}
-          onBlur={commitLabel}
-          disabled={!canEdit || meta.locked}
-          maxLength={40}
-        />
-        <div className={styles.coordRow}>
+      {/* === OBJECTIVE: 指揮官可編輯、車頭只在有設定時顯示 read-only === */}
+      {canEdit ? (
+        <section>
+          <div className={styles.title}>{t('room.objective')}</div>
           <input
             className={styles.input}
-            value={x}
-            placeholder="X · 597"
-            onChange={(e) => setX(e.target.value.replace(/\D/g, ''))}
-            onBlur={commitCoord}
-            disabled={!canEdit || meta.locked}
+            value={label}
+            placeholder="王城城門 · MAIN GATE"
+            onChange={(e) => setLabel(e.target.value)}
+            onBlur={commitLabel}
+            disabled={meta.locked}
+            maxLength={40}
           />
-          <input
-            className={styles.input}
-            value={y}
-            placeholder="Y · 597"
-            onChange={(e) => setY(e.target.value.replace(/\D/g, ''))}
-            onBlur={commitCoord}
-            disabled={!canEdit || meta.locked}
-          />
-        </div>
-      </section>
+          <div className={styles.coordRow}>
+            <input
+              className={styles.input}
+              value={x}
+              placeholder="X · 597"
+              onChange={(e) => setX(e.target.value.replace(/\D/g, ''))}
+              onBlur={commitCoord}
+              disabled={meta.locked}
+            />
+            <input
+              className={styles.input}
+              value={y}
+              placeholder="Y · 597"
+              onChange={(e) => setY(e.target.value.replace(/\D/g, ''))}
+              onBlur={commitCoord}
+              disabled={meta.locked}
+            />
+          </div>
+        </section>
+      ) : (
+        hasObjective && (
+          <section>
+            <div className={styles.title}>{t('room.objective')}</div>
+            {meta.targetLabel && (
+              <div className={styles.objectiveLabel}>{meta.targetLabel}</div>
+            )}
+            {meta.targetX != null && meta.targetY != null && (
+              <div className={styles.coordReadonly}>
+                X · {meta.targetX} &nbsp;·&nbsp; Y · {meta.targetY}
+              </div>
+            )}
+          </section>
+        )
+      )}
 
       {canEdit && (
         <div className={styles.footer}>

@@ -59,11 +59,22 @@
     "initializing": "INITIALIZING ROOM",
     "days_after": "{{days}} 天後",
     "copied": "連結已複製到剪貼簿",
-    "copy_failed": "無法複製，請手動複製網址"
+    "copy_failed": "無法複製，請手動複製網址",
+    "clear_target": "清除目標時間",
+    "waiting_target": "等待指揮官設定落地時間…",
+    "set_suicide": "指定為首發車",
+    "unset_suicide": "取消首發車",
+    "transfer_commander_title": "把指揮權轉給此車頭",
+    "confirm_transfer": "確定把指揮權轉給「{{name}}」？",
+    "claim_commander": "接管指揮",
+    "confirm_claim": "原指揮官似乎離線了，要接管指揮權嗎？",
+    "commander_left": "（已離開）",
+    "commander_offline": "離線中"
   },
   "error": {
     "room_not_found": "房間不存在或已過期",
     "connection_lost": "連線中斷",
-    "firebase_missing": "Firebase 設定缺失"
+    "firebase_missing": "Firebase 設定缺失",
+    "transfer_failed": "轉交失敗，請重試"
   }
 }

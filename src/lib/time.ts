@@ -26,6 +26,23 @@ export function formatDuration(seconds: number): string {
 }
 
 /**
+ * 自動格式化目標時間輸入：純數字會插入冒號變 HH:MM:SS。
+ *   "1"        → "1"
+ *   "12"       → "12"
+ *   "120"      → "12:0"
+ *   "1208"     → "12:08"
+ *   "120812"   → "12:08:12"
+ *   "12:08:12" → "12:08:12"（已格式化也吃）
+ *   超過 6 位數字會自動截斷
+ */
+export function formatTimeInput(raw: string): string {
+  const digits = raw.replace(/\D/g, '').slice(0, 6);
+  if (digits.length <= 2) return digits;
+  if (digits.length <= 4) return `${digits.slice(0, 2)}:${digits.slice(2)}`;
+  return `${digits.slice(0, 2)}:${digits.slice(2, 4)}:${digits.slice(4)}`;
+}
+
+/**
  * 解析使用者輸入的行軍時間。支援：
  *   "1:30"   → 90 秒
  *   "01:30"  → 90 秒

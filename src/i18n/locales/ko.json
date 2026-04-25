@@ -59,11 +59,22 @@
     "initializing": "INITIALIZING ROOM",
     "days_after": "{{days}}일 후",
     "copied": "링크가 클립보드에 복사되었습니다",
-    "copy_failed": "복사 실패, URL을 직접 복사해주세요"
+    "copy_failed": "복사 실패, URL을 직접 복사해주세요",
+    "clear_target": "목표 시간 초기화",
+    "waiting_target": "지휘관이 착지 시간을 설정하기를 기다리는 중…",
+    "set_suicide": "선봉대로 지정",
+    "unset_suicide": "선봉대 해제",
+    "transfer_commander_title": "이 리더에게 지휘권 이양",
+    "confirm_transfer": "「{{name}}」에게 지휘권을 이양하시겠습니까?",
+    "claim_commander": "지휘권 인계받기",
+    "confirm_claim": "지휘관이 오프라인 상태입니다. 지휘권을 인계받으시겠습니까?",
+    "commander_left": "(나감)",
+    "commander_offline": "오프라인"
   },
   "error": {
     "room_not_found": "방이 존재하지 않거나 만료되었습니다",
     "connection_lost": "연결이 끊어졌습니다",
-    "firebase_missing": "Firebase 설정이 누락되었습니다"
+    "firebase_missing": "Firebase 설정이 누락되었습니다",
+    "transfer_failed": "이양 실패, 다시 시도해주세요"
   }
 }

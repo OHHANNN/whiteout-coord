@@ -41,6 +41,43 @@
   font-weight: 500;
 }
 
+.suicideBtn {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 10px;
+  font-family: $font-mono;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  border: 1px dashed $hud-cyan-line;
+  background: transparent;
+  color: $text-dim;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  vertical-align: middle;
+
+  &:hover {
+    color: $alert;
+    border-color: $alert;
+    background: $alert-soft;
+    text-shadow: $glow-alert;
+  }
+}
+
+.suicideBtnOn {
+  border-style: solid;
+  border-color: $alert;
+  color: $alert;
+  background: $alert-soft;
+  text-shadow: $glow-alert;
+
+  &:hover {
+    border-style: dashed;
+    color: $text-dim;
+    background: transparent;
+    text-shadow: none;
+  }
+}
+
 .chip,
 .suicide {
   display: inline-block;
@@ -189,6 +226,26 @@
   &:hover {
     color: $alert;
     border-color: $alert;
+  }
+}
+
+.transferBtn {
+  margin-left: 8px;
+  height: 22px;
+  padding: 0 8px;
+  border: 1px solid $hud-cyan-line;
+  background: transparent;
+  color: $hud-cyan-dim;
+  cursor: pointer;
+  font-family: $font-mono;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+
+  &:hover {
+    border-color: $hud-cyan;
+    color: $hud-cyan;
+    background: $hud-cyan-soft;
+    text-shadow: $glow-cyan;
   }
 }
 

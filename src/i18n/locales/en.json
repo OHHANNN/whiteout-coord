@@ -59,11 +59,22 @@
     "initializing": "INITIALIZING ROOM",
     "days_after": "{{days}} days later",
     "copied": "Link copied to clipboard",
-    "copy_failed": "Copy failed, please copy URL manually"
+    "copy_failed": "Copy failed, please copy URL manually",
+    "clear_target": "Clear target time",
+    "waiting_target": "Waiting for commander to set landing time…",
+    "set_suicide": "Mark as suicide rally",
+    "unset_suicide": "Unmark suicide",
+    "transfer_commander_title": "Transfer command to this driver",
+    "confirm_transfer": "Transfer command to \"{{name}}\"?",
+    "claim_commander": "Claim Command",
+    "confirm_claim": "The commander appears to be offline. Take over command?",
+    "commander_left": "(left)",
+    "commander_offline": "offline"
   },
   "error": {
     "room_not_found": "Room not found or expired",
     "connection_lost": "Connection lost",
-    "firebase_missing": "Firebase config missing"
+    "firebase_missing": "Firebase config missing",
+    "transfer_failed": "Transfer failed, please retry"
   }
 }

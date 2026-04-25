@@ -13,7 +13,9 @@ interface DriverTableProps {
   meta: RoomMeta;
   myUid: string;
   onSetMarch: (uid: string, seconds: number) => void;
+  onSetSuicide: (uid: string, value: boolean) => void;
   onRemove: (uid: string) => void;
+  onTransferCommander?: (uid: string, name: string) => void;
   canRemove: boolean;
   canEditOthers: boolean;
 }
@@ -132,7 +134,9 @@ export function DriverTable({
   meta,
   myUid,
   onSetMarch,
+  onSetSuicide,
   onRemove,
+  onTransferCommander,
   canRemove,
   canEditOthers,
 }: DriverTableProps) {
@@ -178,11 +182,32 @@ export function DriverTable({
             <tr key={uid} className={isMe ? styles.self : ''}>
               <td data-label={t('room.col_driver')}>
                 <span className={styles.name}>{member.name}</span>
-                {member.isSuicide && (
-                  <span className={styles.suicide}>{t('room.role_suicide')}</span>
-                )}
                 {member.role === 'commander' && (
                   <span className={styles.chip}>{t('room.commander')}</span>
+                )}
+                {/* SUICIDE：可編輯時顯示 toggle button、不可編輯但已是首發車時顯示靜態 chip */}
+                {!meta.locked && (isMe || canEditOthers) ? (
+                  <button
+                    type="button"
+                    className={`${styles.suicideBtn} ${
+                      member.isSuicide ? styles.suicideBtnOn : ''
+                    }`}
+                    onClick={() => onSetSuicide(uid, !member.isSuicide)}
+                    title={
+                      member.isSuicide
+                        ? t('room.unset_suicide')
+                        : t('room.set_suicide')
+                    }
+                  >
+                    {member.isSuicide ? '★ ' : '+ '}
+                    {t('room.role_suicide')}
+                  </button>
+                ) : (
+                  member.isSuicide && (
+                    <span className={styles.suicide}>
+                      {t('room.role_suicide')}
+                    </span>
+                  )
                 )}
               </td>
 
@@ -216,6 +241,16 @@ export function DriverTable({
                   <span className={styles.dot} />
                   {t(`room.status_${member.status}`)}
                 </span>
+                {onTransferCommander && !isMe && member.role !== 'commander' && (
+                  <button
+                    type="button"
+                    className={styles.transferBtn}
+                    onClick={() => onTransferCommander(uid, member.name)}
+                    title={t('room.transfer_commander_title')}
+                  >
+                    → {t('room.commander')}
+                  </button>
+                )}
                 {canRemove && !isMe && (
                   <button
                     type="button"

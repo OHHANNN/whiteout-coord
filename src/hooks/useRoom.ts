@@ -28,6 +28,8 @@ interface UseRoomActions {
   updateMyMember: (patch: Partial<Member>) => Promise<void>;
   /** 指揮官專用：編輯任意車頭。非指揮官呼叫會被 security rules 擋下。 */
   updateMember: (targetUid: string, patch: Partial<Member>) => Promise<void>;
+  /** 把指揮權轉給另一位車頭（multi-path atomic update） */
+  transferCommander: (newCommanderUid: string) => Promise<void>;
   removeMember: (uid: string) => Promise<void>;
   leaveRoom: () => Promise<void>;
 }
@@ -232,6 +234,33 @@ export function useRoom(
     }
   };
 
+  const transferCommander = async (newCommanderUid: string) => {
+    if (!pin || !state.meta) return;
+    const oldCommanderId = state.meta.commanderId;
+    if (oldCommanderId === newCommanderUid) return;
+
+    try {
+      // multi-path atomic update：commanderId 換、新指揮官 role 升、舊指揮官 role 降
+      const updates: Record<string, unknown> = {
+        [`rooms/${pin}/meta/commanderId`]: newCommanderUid,
+        [`rooms/${pin}/meta/lastActivityAt`]: serverTimestamp(),
+        [`rooms/${pin}/members/${newCommanderUid}/role`]: 'commander',
+      };
+      // 舊指揮官還在房間裡（沒明確離開）→ 降為 driver
+      if (state.members[oldCommanderId]) {
+        updates[`rooms/${pin}/members/${oldCommanderId}/role`] = 'driver';
+      }
+      await update(ref(database), updates);
+      logInfo('useRoom · transferCommander', {
+        from: oldCommanderId,
+        to: newCommanderUid,
+      });
+    } catch (err) {
+      logError('useRoom · transferCommander rejected', err);
+      throw err;
+    }
+  };
+
   const removeMember = async (targetUid: string) => {
     if (!pin) return;
     try {
@@ -260,6 +289,7 @@ export function useRoom(
     updateMeta,
     updateMyMember,
     updateMember,
+    transferCommander,
     removeMember,
     leaveRoom,
   };

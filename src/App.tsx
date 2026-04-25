@@ -6,6 +6,7 @@ import '@mantine/core/styles.css';
 
 import { useAuth } from '@/hooks/useAuth';
 import { initServerTimeSync } from '@/hooks/useServerTime';
+import { unlockAudio } from '@/lib/audio';
 import { EntryPage } from '@/pages/EntryPage/EntryPage';
 import { RoomPage } from '@/pages/RoomPage/RoomPage';
 import { theme } from '@/theme';
@@ -20,6 +21,24 @@ export function App() {
   // 啟動時鐘校正（訂閱 Firebase .info/serverTimeOffset）
   useEffect(() => {
     initServerTimeSync();
+  }, []);
+
+  // 全域 first-interaction listener · 解鎖 AudioContext（瀏覽器要求使用者互動才能播放）
+  useEffect(() => {
+    const handler = () => {
+      unlockAudio();
+      window.removeEventListener('click', handler);
+      window.removeEventListener('keydown', handler);
+      window.removeEventListener('touchstart', handler);
+    };
+    window.addEventListener('click', handler);
+    window.addEventListener('keydown', handler);
+    window.addEventListener('touchstart', handler);
+    return () => {
+      window.removeEventListener('click', handler);
+      window.removeEventListener('keydown', handler);
+      window.removeEventListener('touchstart', handler);
+    };
   }, []);
 
   return (

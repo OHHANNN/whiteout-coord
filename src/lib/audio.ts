@@ -47,7 +47,16 @@ export function isAudioReady(): boolean {
  * @param volume 0~1
  */
 export function beep(freq: number, duration = 0.15, volume = 0.35): void {
-  if (!ctx || ctx.state !== 'running') return;
+  if (!ctx) {
+    logWarn('audio · beep skipped: AudioContext not initialized (need user interaction first)');
+    return;
+  }
+  if (ctx.state !== 'running') {
+    logWarn('audio · beep skipped: ctx state =', ctx.state);
+    // 嘗試自救：再 resume 一次（某些瀏覽器一旦 inactive 會 suspend）
+    ctx.resume().catch(() => undefined);
+    return;
+  }
 
   const now = ctx.currentTime;
   const osc = ctx.createOscillator();
@@ -64,6 +73,8 @@ export function beep(freq: number, duration = 0.15, volume = 0.35): void {
   osc.connect(gain).connect(ctx.destination);
   osc.start(now);
   osc.stop(now + duration);
+
+  logInfo('audio · beep', `${freq}Hz ${Math.round(duration * 1000)}ms`);
 }
 
 export function vibrate(pattern: number | number[]): void {

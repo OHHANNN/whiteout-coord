@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 
 import { launchAlert } from '@/lib/audio';
+import { logInfo } from '@/lib/logger';
 import { getServerTime } from './useServerTime';
 
 // 在發車前這些秒數時各嗶一聲（0 代表發車當下）
@@ -35,6 +36,7 @@ export function useLaunchAlert(
       for (const offset of ALERT_OFFSETS) {
         if (remainingSec === offset && !firedRef.current.has(offset)) {
           firedRef.current.add(offset);
+          logInfo('launchAlert', `T-${offset}s · firing`);
           launchAlert(offset);
         }
       }

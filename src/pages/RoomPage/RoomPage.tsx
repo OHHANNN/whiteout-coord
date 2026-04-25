@@ -16,7 +16,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useLaunchAlert } from '@/hooks/useLaunchAlert';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useRoom } from '@/hooks/useRoom';
-import { unlockAudio } from '@/lib/audio';
+import { beep, unlockAudio } from '@/lib/audio';
 
 import styles from './RoomPage.module.scss';
 
@@ -41,6 +41,7 @@ export function RoomPage() {
     updateMeta,
     updateMyMember,
     updateMember,
+    transferCommander,
     removeMember,
     leaveRoom,
   } = useRoom(pin, user?.uid, storedName);
@@ -148,10 +149,48 @@ export function RoomPage() {
     }
   };
 
+  const handleSetSuicide = (targetUid: string, value: boolean) => {
+    if (targetUid === user?.uid) {
+      updateMyMember({ isSuicide: value });
+    } else if (isCommander) {
+      updateMember(targetUid, { isSuicide: value });
+    }
+  };
+
+  const handleTransferCommander = (targetUid: string, targetName: string) => {
+    const ok = window.confirm(t('room.confirm_transfer', { name: targetName }));
+    if (!ok) return;
+    transferCommander(targetUid).catch(() =>
+      setToast({ msg: t('error.transfer_failed'), variant: 'error' })
+    );
+  };
+
+  // 偵測指揮官是否離線過久 → 允許其他人接管
+  const commanderMember = meta?.commanderId ? members[meta.commanderId] : null;
+  const commanderAbsent = !!meta && !commanderMember;
+  const commanderStale =
+    !!commanderMember &&
+    commanderMember.status === 'offline' &&
+    Date.now() - (commanderMember.lastSeen ?? 0) > 90_000;
+  const canClaimCommander = !!me && !isCommander && (commanderAbsent || commanderStale);
+
+  const handleClaim = () => {
+    if (!user?.uid) return;
+    const ok = window.confirm(t('room.confirm_claim'));
+    if (!ok) return;
+    transferCommander(user.uid).catch(() =>
+      setToast({ msg: t('error.transfer_failed'), variant: 'error' })
+    );
+  };
+
   // 靜音 toggle / 任何點擊都順便解鎖 AudioContext（瀏覽器要求使用者互動才允許播放）
   const handleToggleMute = (next: boolean) => {
     setMuted(next);
-    if (!next) unlockAudio();
+    if (!next) {
+      unlockAudio();
+      // 從靜音切到開啟時 → 立刻播一聲 test beep 讓使用者確認音效有作用
+      window.setTimeout(() => beep(880, 0.18, 0.4), 120);
+    }
   };
   const handlePageClick = () => {
     if (!muted) unlockAudio();
@@ -173,7 +212,16 @@ export function RoomPage() {
             </div>
             <div className={styles.meta}>
               <span>
-                {t('room.commander')} <b>{commanderName}</b>
+                {t('room.commander')}{' '}
+                <b className={commanderAbsent || commanderStale ? styles.locked : ''}>
+                  {commanderAbsent ? t('room.commander_left') : commanderName}
+                </b>
+                {commanderStale && (
+                  <span className={styles.locked}>
+                    {' '}
+                    · {t('room.commander_offline')}
+                  </span>
+                )}
               </span>
               <span>
                 {t('room.drivers_online', {
@@ -182,6 +230,11 @@ export function RoomPage() {
                 })}
               </span>
               {meta.locked && <span className={styles.locked}>🔒 LOCKED</span>}
+              {canClaimCommander && (
+                <Button variant="primary" size="sm" onClick={handleClaim}>
+                  {t('room.claim_commander')}
+                </Button>
+              )}
             </div>
           </div>
           <div className={styles.headRight}>
@@ -210,32 +263,18 @@ export function RoomPage() {
                 {t('room.driver_list')}
                 <span className={styles.sub}>// {rallyingCount} ACTIVE</span>
               </h2>
-              {me && !meta.locked && (
+              {me && !meta.locked && isCommander && (
                 <div className={styles.myActions}>
-                  {isCommander && (
-                    <label className={styles.check} title={t('room.rallying_hint')}>
-                      <input
-                        type="checkbox"
-                        checked={me.rallying !== false}
-                        onChange={(e) =>
-                          updateMyMember({ rallying: e.target.checked })
-                        }
-                      />
-                      {t('room.rallying_check')}
-                    </label>
-                  )}
-                  {me.rallying !== false && (
-                    <label className={styles.check}>
-                      <input
-                        type="checkbox"
-                        checked={me.isSuicide}
-                        onChange={(e) =>
-                          updateMyMember({ isSuicide: e.target.checked })
-                        }
-                      />
-                      {t('room.suicide_check')}
-                    </label>
-                  )}
+                  <label className={styles.check} title={t('room.rallying_hint')}>
+                    <input
+                      type="checkbox"
+                      checked={me.rallying !== false}
+                      onChange={(e) =>
+                        updateMyMember({ rallying: e.target.checked })
+                      }
+                    />
+                    {t('room.rallying_check')}
+                  </label>
                 </div>
               )}
             </div>
@@ -251,7 +290,11 @@ export function RoomPage() {
               meta={meta}
               myUid={user.uid}
               onSetMarch={handleSetMarch}
+              onSetSuicide={handleSetSuicide}
               onRemove={removeMember}
+              onTransferCommander={
+                isCommander ? handleTransferCommander : undefined
+              }
               canRemove={isCommander}
               canEditOthers={isCommander}
             />
