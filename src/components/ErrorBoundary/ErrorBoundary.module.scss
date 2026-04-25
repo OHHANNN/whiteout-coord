@@ -1,0 +1,70 @@
+.wrap {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: $bg-deep;
+}
+
+.box {
+  max-width: 480px;
+  width: 100%;
+  padding: 40px 32px;
+  background: $bg-panel;
+  border: 1px solid $alert;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 0 24px rgba(255, 59, 59, 0.2);
+}
+
+.title {
+  font-family: $font-display;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  color: $alert;
+  text-shadow: $glow-alert;
+}
+
+.subtitle {
+  font-family: $font-sans;
+  font-size: 13px;
+  color: $text-muted;
+}
+
+.detail {
+  font-family: $font-mono;
+  font-size: 11px;
+  color: $text-dim;
+  background: $bg-elevated;
+  border: 1px solid $hud-cyan-line;
+  padding: 10px;
+  text-align: left;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 160px;
+  overflow: auto;
+}
+
+.btn {
+  margin-top: 8px;
+  height: 40px;
+  padding: 0 20px;
+  border: 1px solid $hud-cyan;
+  background: $hud-cyan-soft;
+  color: $hud-cyan;
+  font-family: $font-display;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  cursor: pointer;
+
+  &:hover {
+    background: $hud-cyan;
+    color: $bg-deep;
+    box-shadow: $glow-cyan;
+  }
+}

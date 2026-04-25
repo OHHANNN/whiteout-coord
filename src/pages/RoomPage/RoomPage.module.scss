@@ -15,6 +15,55 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 24px;
+}
+
+.errorBox {
+  max-width: 440px;
+  width: 100%;
+  padding: 32px 28px;
+  background: $bg-panel;
+  border: 1px solid $alert;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.errorTitle {
+  font-family: $font-display;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: $alert;
+  text-shadow: $glow-alert;
+}
+
+.errorDetail {
+  font-family: $font-mono;
+  font-size: 11px;
+  color: $text-dim;
+  word-break: break-word;
+}
+
+.errorBtn {
+  margin-top: 8px;
+  height: 36px;
+  padding: 0 20px;
+  border: 1px solid $hud-cyan;
+  background: $hud-cyan-soft;
+  color: $hud-cyan;
+  font-family: $font-display;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  cursor: pointer;
+
+  &:hover {
+    background: $hud-cyan;
+    color: $bg-deep;
+    box-shadow: $glow-cyan;
+  }
 }
 
 .loadingText {

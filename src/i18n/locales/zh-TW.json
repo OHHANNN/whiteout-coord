@@ -69,12 +69,20 @@
     "claim_commander": "接管指揮",
     "confirm_claim": "原指揮官似乎離線了，要接管指揮權嗎？",
     "commander_left": "（已離開）",
-    "commander_offline": "離線中"
+    "commander_offline": "離線中",
+    "confirm_remove": "確定要從房間踢除「{{name}}」？",
+    "auto_cleaned": "已自動清除 {{count}} 位離線超過 5 小時的車頭"
   },
   "error": {
     "room_not_found": "房間不存在或已過期",
     "connection_lost": "連線中斷",
+    "reconnecting": "重新連線中…",
     "firebase_missing": "Firebase 設定缺失",
-    "transfer_failed": "轉交失敗，請重試"
+    "transfer_failed": "轉交失敗，請重試",
+    "remove_failed": "踢除失敗",
+    "auth_failed": "登入失敗",
+    "room_load_failed": "房間載入失敗",
+    "retry": "重試",
+    "back_to_entry": "返回進入頁"
   }
 }

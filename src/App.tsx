@@ -4,6 +4,8 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 
 import '@mantine/core/styles.css';
 
+import { ConnectionStatus } from '@/components/ConnectionStatus/ConnectionStatus';
+import { ErrorBoundary } from '@/components/ErrorBoundary/ErrorBoundary';
 import { useAuth } from '@/hooks/useAuth';
 import { initServerTimeSync } from '@/hooks/useServerTime';
 import { unlockAudio } from '@/lib/audio';
@@ -43,13 +45,16 @@ export function App() {
 
   return (
     <MantineProvider theme={theme} defaultColorScheme="dark">
-      <BrowserRouter basename={basename}>
-        <Routes>
-          <Route path="/" element={<EntryPage />} />
-          <Route path="/room/:pin" element={<RoomPage />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </BrowserRouter>
+      <ErrorBoundary>
+        <ConnectionStatus />
+        <BrowserRouter basename={basename}>
+          <Routes>
+            <Route path="/" element={<EntryPage />} />
+            <Route path="/room/:pin" element={<RoomPage />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </ErrorBoundary>
     </MantineProvider>
   );
 }

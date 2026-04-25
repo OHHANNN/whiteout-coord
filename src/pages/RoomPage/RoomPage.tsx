@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 
@@ -28,7 +28,7 @@ export function RoomPage() {
   const { pin } = useParams<{ pin: string }>();
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, error: authError } = useAuth();
   const [storedName, setStoredName] = useLocalStorage<string>(NAME_STORAGE_KEY, '');
   const [muted, setMuted] = useLocalStorage<boolean>(MUTE_STORAGE_KEY, false);
   const [toast, setToast] = useState<{ msg: string; variant: 'success' | 'error' } | null>(null);
@@ -38,6 +38,7 @@ export function RoomPage() {
     isCommander,
     meta,
     members,
+    error: roomError,
     updateMeta,
     updateMyMember,
     updateMember,
@@ -76,7 +77,46 @@ export function RoomPage() {
     if (pinInvalid) navigate('/', { replace: true });
   }, [pinInvalid, navigate]);
 
-  if (pinInvalid) return null;
+  // 自動清除：指揮官進房 3 秒後一次性檢查、踢掉離線 > 24h 的車頭
+  // 用 ref 避免 members 變動時無限重跑
+  const cleanedRef = useRef(false);
+  useEffect(() => {
+    if (!isCommander || !meta || cleanedRef.current) return;
+
+    const id = window.setTimeout(() => {
+      if (cleanedRef.current) return;
+      cleanedRef.current = true;
+
+      const STALE_MS = 5 * 60 * 60 * 1000; // 5 小時（對齊決戰王城活動長度）
+      const now = Date.now();
+      const toRemove: string[] = [];
+
+      Object.entries(members).forEach(([uid, m]) => {
+        // 不踢指揮官自己 / 還在線的人
+        if (uid === meta.commanderId) return;
+        if (m.status !== 'offline') return;
+        if (!m.lastSeen) return;
+        if (now - m.lastSeen > STALE_MS) toRemove.push(uid);
+      });
+
+      if (toRemove.length === 0) return;
+      toRemove.forEach((uid) =>
+        removeMember(uid).catch(() => {
+          /* 寫入失敗不影響主流程，logger 會記 */
+        })
+      );
+      setToast({
+        msg: t('room.auto_cleaned', { count: toRemove.length }),
+        variant: 'success',
+      });
+    }, 3000);
+
+    return () => window.clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isCommander, meta?.commanderId]);
+
+  // 非法 PIN → 已在 effect 中導向進入頁，這裡 hard return 讓 TS narrow type
+  if (pinInvalid || !pin) return null;
 
   // 還沒取得名字 → 先 prompt
   if (!storedName) {
@@ -86,6 +126,44 @@ export function RoomPage() {
         onSubmit={(name) => setStoredName(name)}
         pin={pin}
       />
+    );
+  }
+
+  // 認證失敗 → 顯示錯誤 + 重試
+  if (authError) {
+    return (
+      <div className={styles.loadingWrap}>
+        <div className={styles.errorBox}>
+          <div className={styles.errorTitle}>{t('error.auth_failed')}</div>
+          <div className={styles.errorDetail}>{authError.message}</div>
+          <button
+            type="button"
+            className={styles.errorBtn}
+            onClick={() => window.location.reload()}
+          >
+            ↻ {t('error.retry')}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // 訂閱房間出錯（rules 拒絕、網路問題）
+  if (roomError) {
+    return (
+      <div className={styles.loadingWrap}>
+        <div className={styles.errorBox}>
+          <div className={styles.errorTitle}>{t('error.room_load_failed')}</div>
+          <div className={styles.errorDetail}>{roomError.message}</div>
+          <button
+            type="button"
+            className={styles.errorBtn}
+            onClick={() => navigate('/')}
+          >
+            ← {t('error.back_to_entry')}
+          </button>
+        </div>
+      </div>
     );
   }
 
@@ -162,6 +240,16 @@ export function RoomPage() {
     if (!ok) return;
     transferCommander(targetUid).catch(() =>
       setToast({ msg: t('error.transfer_failed'), variant: 'error' })
+    );
+  };
+
+  const handleRemoveMember = (targetUid: string) => {
+    const member = members[targetUid];
+    if (!member) return;
+    const ok = window.confirm(t('room.confirm_remove', { name: member.name }));
+    if (!ok) return;
+    removeMember(targetUid).catch(() =>
+      setToast({ msg: t('error.remove_failed'), variant: 'error' })
     );
   };
 
@@ -291,7 +379,7 @@ export function RoomPage() {
               myUid={user.uid}
               onSetMarch={handleSetMarch}
               onSetSuicide={handleSetSuicide}
-              onRemove={removeMember}
+              onRemove={handleRemoveMember}
               onTransferCommander={
                 isCommander ? handleTransferCommander : undefined
               }

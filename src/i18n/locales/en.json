@@ -69,12 +69,20 @@
     "claim_commander": "Claim Command",
     "confirm_claim": "The commander appears to be offline. Take over command?",
     "commander_left": "(left)",
-    "commander_offline": "offline"
+    "commander_offline": "offline",
+    "confirm_remove": "Remove \"{{name}}\" from the room?",
+    "auto_cleaned": "Auto-removed {{count}} drivers offline for more than 5 hours"
   },
   "error": {
     "room_not_found": "Room not found or expired",
     "connection_lost": "Connection lost",
+    "reconnecting": "Reconnecting…",
     "firebase_missing": "Firebase config missing",
-    "transfer_failed": "Transfer failed, please retry"
+    "transfer_failed": "Transfer failed, please retry",
+    "remove_failed": "Failed to remove",
+    "auth_failed": "Sign-in failed",
+    "room_load_failed": "Failed to load room",
+    "retry": "Retry",
+    "back_to_entry": "Back to entry"
   }
 }

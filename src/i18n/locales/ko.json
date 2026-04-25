@@ -69,12 +69,20 @@
     "claim_commander": "지휘권 인계받기",
     "confirm_claim": "지휘관이 오프라인 상태입니다. 지휘권을 인계받으시겠습니까?",
     "commander_left": "(나감)",
-    "commander_offline": "오프라인"
+    "commander_offline": "오프라인",
+    "confirm_remove": "「{{name}}」을(를) 방에서 내보내시겠습니까?",
+    "auto_cleaned": "5시간 이상 오프라인 상태인 리더 {{count}}명을 자동으로 정리했습니다"
   },
   "error": {
     "room_not_found": "방이 존재하지 않거나 만료되었습니다",
     "connection_lost": "연결이 끊어졌습니다",
+    "reconnecting": "재연결 중…",
     "firebase_missing": "Firebase 설정이 누락되었습니다",
-    "transfer_failed": "이양 실패, 다시 시도해주세요"
+    "transfer_failed": "이양 실패, 다시 시도해주세요",
+    "remove_failed": "내보내기 실패",
+    "auth_failed": "로그인 실패",
+    "room_load_failed": "방 로딩 실패",
+    "retry": "재시도",
+    "back_to_entry": "입장 페이지로 돌아가기"
   }
 }
