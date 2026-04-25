@@ -78,7 +78,8 @@
     "load_wave_hint": "點擊載入這波（雙擊重命名）",
     "delete_wave_hint": "刪除這波預設",
     "wave_double_click_hint": "點擊載入 · 雙擊重命名",
-    "confirm_delete_wave": "確定刪除波次「{{name}}」？"
+    "confirm_delete_wave": "確定刪除波次「{{name}}」？",
+    "current_wave": "當前進行中"
   },
   "error": {
     "room_not_found": "房間不存在或已過期",

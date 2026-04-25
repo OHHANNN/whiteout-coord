@@ -35,12 +35,13 @@ export function WavePresets({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
 
-  if (!canEdit) return null;
-
   const order = meta.wavePresetOrder ?? [];
   const presets: WavePreset[] = order
     .map((id) => meta.wavePresets?.[id])
     .filter((p): p is WavePreset => !!p);
+
+  // 沒有任何 preset 又不是指揮官 → 完全不顯示這個 section
+  if (!canEdit && presets.length === 0) return null;
 
   const isActive = (preset: WavePreset) => {
     return (
@@ -80,7 +81,7 @@ export function WavePresets({
           const time = preset.targetLandingAt
             ? formatUtcTime(preset.targetLandingAt)
             : '--:--';
-          if (editingId === preset.id) {
+          if (editingId === preset.id && canEdit) {
             return (
               <div key={preset.id} className={styles.pill}>
                 <input
@@ -104,43 +105,54 @@ export function WavePresets({
           return (
             <div
               key={preset.id}
-              className={`${styles.pill} ${active ? styles.pillActive : ''}`}
+              className={`${styles.pill} ${active ? styles.pillActive : ''} ${
+                !canEdit ? styles.pillReadonly : ''
+              }`}
             >
               <button
                 type="button"
                 className={styles.pillBtn}
-                onClick={() => onLoad(preset.id)}
-                onDoubleClick={() => startEdit(preset)}
-                title={t('room.load_wave_hint')}
+                onClick={canEdit ? () => onLoad(preset.id) : undefined}
+                onDoubleClick={canEdit ? () => startEdit(preset) : undefined}
+                title={
+                  canEdit
+                    ? t('room.load_wave_hint')
+                    : active
+                      ? t('room.current_wave')
+                      : preset.name ?? 'Wave'
+                }
+                disabled={!canEdit}
               >
                 {active && <span className={styles.dot} aria-hidden />}
-                <span className={styles.pillName}>
-                  {preset.name ?? 'Wave'}
-                </span>
+                <span className={styles.pillName}>{preset.name ?? 'Wave'}</span>
                 <span className={styles.pillTime}>{time}</span>
               </button>
-              <button
-                type="button"
-                className={styles.pillRemove}
-                onClick={() => handleDelete(preset)}
-                title={t('room.delete_wave_hint')}
-                aria-label="delete"
-              >
-                ×
-              </button>
+              {canEdit && (
+                <button
+                  type="button"
+                  className={styles.pillRemove}
+                  onClick={() => handleDelete(preset)}
+                  title={t('room.delete_wave_hint')}
+                  aria-label="delete"
+                >
+                  ×
+                </button>
+              )}
             </div>
           );
         })}
-        <button
-          type="button"
-          className={styles.addBtn}
-          onClick={() => onSave()}
-          title={t('room.save_wave_hint')}
-        >
-          + {t('room.save_wave')}
-        </button>
+        {canEdit && (
+          <button
+            type="button"
+            className={styles.addBtn}
+            onClick={() => onSave()}
+            title={t('room.save_wave_hint')}
+          >
+            + {t('room.save_wave')}
+          </button>
+        )}
       </div>
-      {presets.length > 0 && (
+      {canEdit && presets.length > 0 && (
         <div className={styles.hint}>{t('room.wave_double_click_hint')}</div>
       )}
     </section>

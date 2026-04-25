@@ -38,6 +38,24 @@
   }
 }
 
+.pillReadonly {
+  // 車頭視角：只能看不能戳
+  cursor: default;
+  opacity: 0.85;
+
+  &:hover {
+    border-color: $hud-cyan-line;
+  }
+
+  .pillBtn {
+    cursor: default;
+  }
+
+  &.pillActive {
+    opacity: 1;
+  }
+}
+
 .pillBtn {
   display: inline-flex;
   align-items: center;

@@ -78,7 +78,8 @@
     "load_wave_hint": "Click to load this wave (double-click to rename)",
     "delete_wave_hint": "Delete this wave preset",
     "wave_double_click_hint": "Click to load · Double-click to rename",
-    "confirm_delete_wave": "Delete wave \"{{name}}\"?"
+    "confirm_delete_wave": "Delete wave \"{{name}}\"?",
+    "current_wave": "Currently active"
   },
   "error": {
     "room_not_found": "Room not found or expired",

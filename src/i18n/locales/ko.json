@@ -78,7 +78,8 @@
     "load_wave_hint": "클릭하면 이 웨이브를 불러옵니다 (더블클릭으로 이름 변경)",
     "delete_wave_hint": "이 웨이브 프리셋 삭제",
     "wave_double_click_hint": "클릭으로 불러오기 · 더블클릭으로 이름 변경",
-    "confirm_delete_wave": "웨이브「{{name}}」을(를) 삭제하시겠습니까?"
+    "confirm_delete_wave": "웨이브「{{name}}」을(를) 삭제하시겠습니까?",
+    "current_wave": "진행 중"
   },
   "error": {
     "room_not_found": "방이 존재하지 않거나 만료되었습니다",
