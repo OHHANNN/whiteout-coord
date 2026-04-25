@@ -84,6 +84,9 @@
             "rallying": {
               ".validate": "newData.isBoolean() || newData.val() == null"
             },
+            "rallyWindowSeconds": {
+              ".validate": "newData.isNumber() && (newData.val() == 300 || newData.val() == 600) || newData.val() == null"
+            },
             "$other": { ".validate": false }
           }
         },

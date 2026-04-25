@@ -5,6 +5,7 @@ import { useNow } from '@/hooks/useServerTime';
 import { formatDuration, formatUtcTime, parseMarchInput } from '@/lib/time';
 
 import type { DriverView, Member, RoomMeta } from '@/types/room';
+import { getLaunchAtMs } from '@/types/room';
 
 import styles from './DriverTable.module.scss';
 
@@ -14,6 +15,7 @@ interface DriverTableProps {
   myUid: string;
   onSetMarch: (uid: string, seconds: number) => void;
   onSetSuicide: (uid: string, value: boolean) => void;
+  onSetRally: (uid: string, seconds: number) => void;
   onRemove: (uid: string) => void;
   onTransferCommander?: (uid: string, name: string) => void;
   canRemove: boolean;
@@ -26,8 +28,8 @@ function buildView(
 ): DriverView[] {
   return Object.entries(members)
     .map(([uid, member]) => {
-      const launchAtMs =
-        targetLandingAt != null ? targetLandingAt - member.marchSeconds * 1000 : null;
+      // launch = target - march - rally_window
+      const launchAtMs = getLaunchAtMs(targetLandingAt, member);
       return {
         uid,
         member,
@@ -135,6 +137,7 @@ export function DriverTable({
   myUid,
   onSetMarch,
   onSetSuicide,
+  onSetRally,
   onRemove,
   onTransferCommander,
   canRemove,
@@ -154,6 +157,7 @@ export function DriverTable({
         <tr>
           <th>{t('room.col_driver')}</th>
           <th>{t('room.col_march')}</th>
+          <th>{t('room.col_rally')}</th>
           <th>{t('room.col_launch')}</th>
           <th>{t('room.col_until_launch')}</th>
           <th>{t('room.col_status')}</th>
@@ -218,6 +222,28 @@ export function DriverTable({
                 label={t('room.col_march')}
               />
 
+              <td className={styles.mono} data-label={t('room.col_rally')}>
+                {canEditThisMarch ? (
+                  <div className={styles.rallyToggle}>
+                    {[300, 600].map((sec) => {
+                      const cur = member.rallyWindowSeconds ?? 300;
+                      return (
+                        <button
+                          key={sec}
+                          type="button"
+                          className={`${styles.rallyBtn} ${cur === sec ? styles.rallyBtnOn : ''}`}
+                          onClick={() => onSetRally(uid, sec)}
+                        >
+                          {sec / 60}m
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  `${(member.rallyWindowSeconds ?? 300) / 60}m`
+                )}
+              </td>
+
               <td
                 className={`${styles.mono} ${styles.launch}`}
                 data-label={t('room.col_launch')}
@@ -267,7 +293,7 @@ export function DriverTable({
         })}
         {rows.length === 0 && (
           <tr>
-            <td colSpan={5} className={styles.empty}>
+            <td colSpan={6} className={styles.empty}>
               No drivers yet · 尚無車頭
             </td>
           </tr>

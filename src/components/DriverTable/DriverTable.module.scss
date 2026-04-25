@@ -160,6 +160,36 @@
   }
 }
 
+.rallyToggle {
+  display: inline-flex;
+  gap: 2px;
+  border: 1px solid $hud-cyan-line;
+}
+
+.rallyBtn {
+  height: 26px;
+  padding: 0 8px;
+  border: none;
+  background: transparent;
+  color: $text-dim;
+  font-family: $font-mono;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+
+  &:hover {
+    color: $hud-cyan-dim;
+    background: $hud-cyan-soft;
+  }
+}
+
+.rallyBtnOn {
+  color: $hud-cyan;
+  background: $hud-cyan-soft;
+  text-shadow: $glow-cyan;
+}
+
 .miniBtn {
   width: 22px;
   height: 22px;

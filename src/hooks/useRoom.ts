@@ -159,6 +159,7 @@ export function useRoom(
             status: 'ready',
             lastSeen: now,
             rallying: true,
+            rallyWindowSeconds: 300,
           };
           await set(ref(database, `rooms/${pin}`), {
             meta,
@@ -185,6 +186,7 @@ export function useRoom(
             status: 'ready',
             lastSeen: now,
             rallying: existingMember?.rallying ?? true,
+            rallyWindowSeconds: existingMember?.rallyWindowSeconds ?? 300,
           };
           await set(myRef, member);
           if (cancelled) return;
@@ -460,17 +462,20 @@ export function useRoom(
     // Snapshot 所有出集結車頭
     const drivers: BattleDriver[] = Object.entries(state.members)
       .filter(([, m]) => m.rallying !== false)
-      .map(([uid, m]) => ({
-        uid,
-        name: m.name,
-        marchSeconds: m.marchSeconds,
-        plannedLaunchAt:
-          state.meta!.targetLandingAt != null
-            ? state.meta!.targetLandingAt - m.marchSeconds * 1000
-            : null,
-        isSuicide: m.isSuicide,
-        status: m.status,
-      }));
+      .map(([uid, m]) => {
+        const rally = m.rallyWindowSeconds ?? 300;
+        return {
+          uid,
+          name: m.name,
+          marchSeconds: m.marchSeconds,
+          plannedLaunchAt:
+            state.meta!.targetLandingAt != null
+              ? state.meta!.targetLandingAt - (m.marchSeconds + rally) * 1000
+              : null,
+          isSuicide: m.isSuicide,
+          status: m.status,
+        };
+      });
 
     const snapshot: BattleSnapshot = {
       id: battleId,

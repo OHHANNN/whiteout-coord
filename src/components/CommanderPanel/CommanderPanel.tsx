@@ -14,6 +14,8 @@ import styles from './CommanderPanel.module.scss';
 interface CommanderPanelProps {
   meta: RoomMeta;
   canEdit: boolean; // 只有指揮官可以編輯
+  /** 當前使用者的「按下發車」時刻。車頭視角會把這個變成主要倒數。 */
+  myLaunchAtMs?: number | null;
   onUpdate: (patch: Partial<RoomMeta>) => void;
   onSaveWave: (name?: string) => void;
   onLoadWave: (presetId: string) => void;
@@ -24,6 +26,7 @@ interface CommanderPanelProps {
 export function CommanderPanel({
   meta,
   canEdit,
+  myLaunchAtMs,
   onUpdate,
   onSaveWave,
   onLoadWave,
@@ -180,13 +183,28 @@ export function CommanderPanel({
         </section>
       ) : null}
 
-      {/* === T-MINUS（所有人都看得到） === */}
+      {/* === MY LAUNCH（車頭視角放大顯示自己的發車倒數） === */}
+      {!canEdit && myLaunchAtMs != null && (
+        <section>
+          <div className={styles.title}>{t('room.my_launch')}</div>
+          <Countdown
+            targetAt={myLaunchAtMs}
+            label={t('room.my_launch_hint')}
+            size="xl"
+          />
+          <div className={styles.targetInfo}>
+            @ {formatUtcTime(myLaunchAtMs)} UTC
+          </div>
+        </section>
+      )}
+
+      {/* === T-MINUS 落地倒數 === */}
       <section>
         <div className={styles.title}>{t('room.t_minus')}</div>
         <Countdown
           targetAt={meta.targetLandingAt}
           label={t('room.all_land_sim')}
-          size="lg"
+          size={canEdit ? 'lg' : 'md'}
         />
         {meta.targetLandingAt != null ? (
           <div className={styles.targetInfo}>

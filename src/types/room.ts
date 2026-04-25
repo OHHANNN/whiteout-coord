@@ -84,6 +84,12 @@ export interface Member {
    * 指揮官可以設為 false 來當純調度員（不出現在車頭名單、不列入計算）。
    */
   rallying: boolean;
+  /**
+   * 集結窗口長度（秒）。WoS 內可選 5 分鐘 (300) 或 10 分鐘 (600)。
+   * launch_time = target_landing − march_time − rally_window_time
+   * 缺欄位時預設 300。
+   */
+  rallyWindowSeconds?: number;
 }
 
 export interface Room {
@@ -99,4 +105,17 @@ export interface DriverView {
   member: Member;
   launchAtMs: number | null; // 發車時間 epoch ms
   untilLaunchMs: number | null; // 距發車毫秒
+}
+
+/**
+ * 統一計算車頭的「按下發動集結」時刻。
+ * launch = target_landing − march − rally_window
+ */
+export function getLaunchAtMs(
+  targetLandingAt: number | null | undefined,
+  member: Pick<Member, 'marchSeconds' | 'rallyWindowSeconds'> | null | undefined
+): number | null {
+  if (targetLandingAt == null || !member) return null;
+  const rally = member.rallyWindowSeconds ?? 300;
+  return targetLandingAt - (member.marchSeconds + rally) * 1000;
 }

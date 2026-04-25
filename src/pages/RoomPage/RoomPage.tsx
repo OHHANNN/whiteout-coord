@@ -74,9 +74,11 @@ export function RoomPage() {
 
   // === 以下 hook 必須在所有 early return 之前呼叫（React rules of hooks）===
   const me = user?.uid ? members[user.uid] : null;
+  // 發車 = 落地時間 − 行軍 − 集結窗口
   const myLaunchAtMs =
     me && me.rallying !== false && meta?.targetLandingAt != null
-      ? meta.targetLandingAt - me.marchSeconds * 1000
+      ? meta.targetLandingAt -
+        (me.marchSeconds + (me.rallyWindowSeconds ?? 300)) * 1000
       : null;
   useLaunchAlert(myLaunchAtMs, !muted);
 
@@ -297,6 +299,15 @@ export function RoomPage() {
     }
   };
 
+  const handleSetRally = (targetUid: string, seconds: number) => {
+    const next = seconds === 600 ? 600 : 300; // 只接受 5 或 10 分鐘
+    if (targetUid === user?.uid) {
+      updateMyMember({ rallyWindowSeconds: next });
+    } else if (isCommander) {
+      updateMember(targetUid, { rallyWindowSeconds: next });
+    }
+  };
+
   const handleTransferCommander = async (targetUid: string, targetName: string) => {
     const ok = await confirm({
       message: t('room.confirm_transfer', { name: targetName }),
@@ -413,6 +424,7 @@ export function RoomPage() {
           <CommanderPanel
             meta={meta}
             canEdit={isCommander}
+            myLaunchAtMs={myLaunchAtMs}
             onUpdate={(patch) => {
               // 從未鎖 → 鎖定 = 啟動戰報 snapshot
               if (patch.locked === true && !meta.locked) {
@@ -479,6 +491,7 @@ export function RoomPage() {
               myUid={user.uid}
               onSetMarch={handleSetMarch}
               onSetSuicide={handleSetSuicide}
+              onSetRally={handleSetRally}
               onRemove={handleRemoveMember}
               onTransferCommander={
                 isCommander ? handleTransferCommander : undefined
