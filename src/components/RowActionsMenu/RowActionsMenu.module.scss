@@ -1,0 +1,105 @@
+.wrap {
+  position: relative;
+  display: inline-block;
+}
+
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: $text-dim;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+
+  &:hover {
+    color: $hud-cyan;
+    border-color: $hud-cyan-line;
+    background: $hud-cyan-soft;
+  }
+}
+
+.triggerOpen {
+  color: $hud-cyan;
+  border-color: $hud-cyan;
+  background: $hud-cyan-soft;
+}
+
+.menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: 140px;
+  background: $bg-panel;
+  border: 1px solid $hud-cyan;
+  backdrop-filter: blur(8px);
+  box-shadow:
+    0 4px 14px rgba(0, 0, 0, 0.6),
+    0 0 10px rgba(0, 255, 255, 0.18);
+  list-style: none;
+  padding: 4px;
+  margin: 0;
+  z-index: 90;
+  animation: menuIn 0.12s ease-out;
+
+  @include reduced-motion {
+    animation: none;
+  }
+}
+
+@keyframes menuIn {
+  from {
+    transform: translateY(-4px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 7px 10px;
+  background: transparent;
+  border: 1px solid transparent;
+  font-family: $font-mono;
+  font-size: 12px;
+  color: $text-muted;
+  cursor: pointer;
+  text-align: left;
+  white-space: nowrap;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+
+  &:hover {
+    background: $hud-cyan-soft;
+    color: $hud-cyan;
+    border-color: $hud-cyan-line;
+  }
+}
+
+.itemDanger {
+  color: $alert;
+
+  &:hover {
+    background: $alert-soft;
+    color: $alert;
+    border-color: $alert;
+    text-shadow: $glow-alert;
+  }
+}
+
+.itemIcon {
+  display: inline-block;
+  width: 14px;
+  text-align: center;
+  font-family: $font-mono;
+}

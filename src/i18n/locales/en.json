@@ -80,6 +80,7 @@
     "commander_left": "(left)",
     "commander_offline": "offline",
     "confirm_remove": "Remove \"{{name}}\" from the room?",
+    "confirm_remove_short": "Remove",
     "auto_cleaned": "Auto-removed {{count}} drivers offline for more than 5 hours",
     "waves_label": "WAVES · PRESETS",
     "save_wave": "Save Current as New Wave",

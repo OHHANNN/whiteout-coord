@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { RowActionsMenu, type ActionItem } from '@/components/RowActionsMenu/RowActionsMenu';
 import { useNow } from '@/hooks/useServerTime';
 import { formatDuration, formatUtcTime, parseMarchInput } from '@/lib/time';
 
@@ -297,30 +298,31 @@ export function DriverTable({
               </td>
 
               <td data-label={t('room.col_status')}>
-                <span className={`${styles.status} ${styles[member.status]}`}>
-                  <span className={styles.dot} />
-                  {t(`room.status_${member.status}`)}
-                </span>
-                {onTransferCommander && !isMe && member.role !== 'commander' && (
-                  <button
-                    type="button"
-                    className={styles.transferBtn}
-                    onClick={() => onTransferCommander(uid, member.name)}
-                    title={t('room.transfer_commander_title')}
-                  >
-                    → {t('room.commander')}
-                  </button>
-                )}
-                {canRemove && !isMe && (
-                  <button
-                    type="button"
-                    className={styles.removeBtn}
-                    onClick={() => onRemove(uid)}
-                    title="Remove"
-                  >
-                    ×
-                  </button>
-                )}
+                <div className={styles.statusRow}>
+                  <span className={`${styles.status} ${styles[member.status]}`}>
+                    <span className={styles.dot} />
+                    {t(`room.status_${member.status}`)}
+                  </span>
+                  {!isMe && (() => {
+                    const items: ActionItem[] = [];
+                    if (onTransferCommander && member.role !== 'commander') {
+                      items.push({
+                        label: t('room.transfer_commander_title'),
+                        icon: '→',
+                        onSelect: () => onTransferCommander(uid, member.name),
+                      });
+                    }
+                    if (canRemove) {
+                      items.push({
+                        label: t('room.confirm_remove_short'),
+                        icon: '×',
+                        variant: 'danger',
+                        onSelect: () => onRemove(uid),
+                      });
+                    }
+                    return items.length > 0 ? <RowActionsMenu items={items} /> : null;
+                  })()}
+                </div>
               </td>
             </tr>
           );

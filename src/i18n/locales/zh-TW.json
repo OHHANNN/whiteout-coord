@@ -80,6 +80,7 @@
     "commander_left": "（已離開）",
     "commander_offline": "離線中",
     "confirm_remove": "確定要從房間踢除「{{name}}」？",
+    "confirm_remove_short": "踢除",
     "auto_cleaned": "已自動清除 {{count}} 位離線超過 5 小時的車頭",
     "waves_label": "WAVES · 波次預設",
     "save_wave": "儲存當前為新波次",

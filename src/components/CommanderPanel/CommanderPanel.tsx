@@ -77,10 +77,8 @@ export function CommanderPanel({
       onUpdate({ targetLandingAt: meta.targetLandingAt + deltaSec * 1000 });
       return;
     }
-    // 沒有目標 → 從當下算、把秒數歸零（目標永遠 HH:MM:00 好看）
-    const target = now + deltaSec * 1000;
-    const rounded = Math.round(target / 60000) * 60000;
-    onUpdate({ targetLandingAt: rounded });
+    // 沒有目標 → 從當下算、保留秒數（反集結需要精準到秒）
+    onUpdate({ targetLandingAt: now + deltaSec * 1000 });
   };
 
   const commitLabel = () => {
@@ -163,17 +161,30 @@ export function CommanderPanel({
             </div>
             <div className={styles.btnRow}>
               {[
-                { label: '+5m', sec: 5 * 60 },
-                { label: '+10m', sec: 10 * 60 },
-                { label: '+30m', sec: 30 * 60 },
-                { label: '+1h', sec: 60 * 60 },
-              ].map(({ label, sec }) => (
+                { label: '+5m', sec: 5 * 60, title: '從現在起 5 分鐘後落地' },
+                {
+                  label: '+6m',
+                  sec: 6 * 60,
+                  title: '反集結（從當下含秒數 +6 分鐘）',
+                },
+                {
+                  label: '+10m',
+                  sec: 10 * 60,
+                  title: '從現在起 10 分鐘後落地',
+                },
+                {
+                  label: '+30m',
+                  sec: 30 * 60,
+                  title: '從現在起 30 分鐘後落地',
+                },
+              ].map(({ label, sec, title }) => (
                 <button
                   key={label}
                   type="button"
                   className={styles.chip}
                   onClick={() => setRelative(sec)}
                   disabled={meta.locked}
+                  title={title}
                 >
                   {label}
                 </button>

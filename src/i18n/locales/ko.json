@@ -80,6 +80,7 @@
     "commander_left": "(나감)",
     "commander_offline": "오프라인",
     "confirm_remove": "「{{name}}」을(를) 방에서 내보내시겠습니까?",
+    "confirm_remove_short": "내보내기",
     "auto_cleaned": "5시간 이상 오프라인 상태인 리더 {{count}}명을 자동으로 정리했습니다",
     "waves_label": "WAVES · 웨이브 프리셋",
     "save_wave": "현재 설정을 새 웨이브로 저장",
