@@ -1,18 +1,17 @@
 import { useEffect } from 'react';
-import { MantineProvider } from '@mantine/core';
+import { ThemeProvider } from 'next-themes';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
-
-import '@mantine/core/styles.css';
 
 import { ConfirmProvider } from '@/components/ConfirmDialog/ConfirmDialog';
 import { ConnectionStatus } from '@/components/ConnectionStatus/ConnectionStatus';
 import { ErrorBoundary } from '@/components/ErrorBoundary/ErrorBoundary';
+import { Toaster } from '@/components/ui/sonner';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import { useAuth } from '@/hooks/useAuth';
 import { initServerTimeSync } from '@/hooks/useServerTime';
 import { unlockAudio } from '@/lib/audio';
 import { EntryPage } from '@/pages/EntryPage/EntryPage';
 import { RoomPage } from '@/pages/RoomPage/RoomPage';
-import { theme } from '@/theme';
 
 // 部署到 GitHub Pages 子路徑時 BrowserRouter 需要 basename
 const basename = import.meta.env.BASE_URL.replace(/\/$/, '') || undefined;
@@ -45,19 +44,29 @@ export function App() {
   }, []);
 
   return (
-    <MantineProvider theme={theme} defaultColorScheme="dark">
-      <ErrorBoundary>
-        <ConfirmProvider>
-          <ConnectionStatus />
-          <BrowserRouter basename={basename}>
-            <Routes>
-              <Route path="/" element={<EntryPage />} />
-              <Route path="/room/:pin" element={<RoomPage />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </BrowserRouter>
-        </ConfirmProvider>
-      </ErrorBoundary>
-    </MantineProvider>
+    // next-themes 控制 .dark class on <html>，shadcn @custom-variant dark 對應
+    // defaultTheme="system" → 跟 OS、有 toggle 元件可手動切
+    <ThemeProvider
+      attribute="class"
+      defaultTheme="system"
+      enableSystem
+      disableTransitionOnChange
+    >
+      <TooltipProvider delayDuration={300}>
+        <ErrorBoundary>
+          <ConfirmProvider>
+            <ConnectionStatus />
+            <BrowserRouter basename={basename}>
+              <Routes>
+                <Route path="/" element={<EntryPage />} />
+                <Route path="/room/:pin" element={<RoomPage />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </BrowserRouter>
+            <Toaster richColors closeButton />
+          </ConfirmProvider>
+        </ErrorBoundary>
+      </TooltipProvider>
+    </ThemeProvider>
   );
 }
