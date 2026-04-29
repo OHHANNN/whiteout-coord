@@ -128,27 +128,10 @@ export function useRoom(
 
     (async () => {
       try {
-        // 先把 onDisconnect 註冊好、再寫資料。
-        // 順序很重要：如果先 set 才註冊 onDisconnect、那一瞬間 tab 關掉
-        // 寫進去的 member 會永遠卡 ready / online。
-        // 即使 set() 後 cancelled，network call 已經飛出去無法收回。
         const myRef = ref(database, `rooms/${pin}/members/${uid}`);
-        await onDisconnect(myRef).update({
-          status: 'offline' satisfies MemberStatus,
-          lastSeen: serverTimestamp(),
-        });
-        if (cancelled) {
-          // 中斷：取消剛剛註冊的 onDisconnect
-          onDisconnect(myRef).cancel().catch(() => undefined);
-          return;
-        }
-
         const metaRef = ref(database, `rooms/${pin}/meta`);
         const metaSnap = await get(metaRef);
-        if (cancelled) {
-          onDisconnect(myRef).cancel().catch(() => undefined);
-          return;
-        }
+        if (cancelled) return;
 
         // 房間不存在 → 建立（自己成為 commander）
         if (!metaSnap.exists()) {
@@ -184,10 +167,7 @@ export function useRoom(
         } else {
           // 房間存在 → 以 driver 加入（或更新自己 name）
           const mySnap = await get(myRef);
-          if (cancelled) {
-            onDisconnect(myRef).cancel().catch(() => undefined);
-            return;
-          }
+          if (cancelled) return;
           const existingMember = mySnap.val() as Member | null;
 
           const now = Date.now();
@@ -213,7 +193,14 @@ export function useRoom(
 
         joinedRef.current = true;
 
-        // onDisconnect 已在 effect 開頭註冊好了
+        // presence：room 已存在 + member 已寫入後才註冊 onDisconnect
+        // （security rules 要求 room 先存在才能對 members 路徑做寫入）
+        // 不 await：register 是 fire-and-forget，server side 會自動處理
+        onDisconnect(myRef).update({
+          status: 'offline' satisfies MemberStatus,
+          lastSeen: serverTimestamp(),
+        });
+
         // lastActivityAt 用 serverTimestamp
         await update(ref(database, `rooms/${pin}/meta`), {
           lastActivityAt: serverTimestamp(),
