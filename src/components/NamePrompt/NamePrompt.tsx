@@ -93,7 +93,9 @@ export function NamePrompt({
           onChange={(e) => setName(e.target.value)}
           placeholder={t('entry.name_placeholder')}
           maxLength={20}
-          autoFocus
+          // 僅桌機 autoFocus：手機 drawer 開啟同時觸發鍵盤會讓 iOS Safari
+          // 把 fixed-bottom drawer 推到奇怪位置（kbd + 動畫競爭 viewport）
+          autoFocus={isDesktop}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !disabled) submit();
           }}
@@ -172,18 +174,20 @@ export function NamePrompt({
   }
 
   // 手機 → Drawer
-  // 注意：max-h-[90dvh] 防止 drawer 撐到 viewport 底，加上 body 可捲
-  // 確保 DrawerFooter（進入 / 取消）永遠在可見範圍內
-  // iOS Safari 的 URL bar 會動態收合、用 dvh（dynamic viewport height）跟它一起變
+  // 為什麼不用 max-h-[90dvh] + flex-1 overflow-y-auto：iOS Safari 的鍵盤
+  // 開啟時會把 fixed-bottom 元素推上去（visualViewport 跟 dvh 計算不一致）
+  // → drawer body 被 flex-1 壓成 0、或整個 drawer 飛到螢幕外
+  // 簡化策略：drawer 自然 content 高度（vaul 預設）、只在 footer 加 safe-area
+  // 內容很短（只有名字 input + 角色 toggle）、不會超過 viewport，不需要 scroll
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="mx-auto max-h-[90dvh] max-w-md">
+      <DrawerContent className="mx-auto max-w-md">
         <DrawerHeader className="text-center">
           <DrawerTitle className="text-base">{title}</DrawerTitle>
           <DrawerDescription>{desc}</DrawerDescription>
         </DrawerHeader>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-2">{body}</div>
+        <div className="px-4 pb-2">{body}</div>
 
         <DrawerFooter className="pb-[max(env(safe-area-inset-bottom),1rem)]">
           <Button onClick={submit} disabled={disabled}>
