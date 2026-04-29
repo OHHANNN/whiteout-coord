@@ -172,17 +172,20 @@ export function NamePrompt({
   }
 
   // 手機 → Drawer
+  // 注意：max-h-[90dvh] 防止 drawer 撐到 viewport 底，加上 body 可捲
+  // 確保 DrawerFooter（進入 / 取消）永遠在可見範圍內
+  // iOS Safari 的 URL bar 會動態收合、用 dvh（dynamic viewport height）跟它一起變
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="mx-auto max-w-md">
+      <DrawerContent className="mx-auto max-h-[90dvh] max-w-md">
         <DrawerHeader className="text-center">
           <DrawerTitle className="text-base">{title}</DrawerTitle>
           <DrawerDescription>{desc}</DrawerDescription>
         </DrawerHeader>
 
-        <div className="px-4 pb-2">{body}</div>
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-2">{body}</div>
 
-        <DrawerFooter>
+        <DrawerFooter className="pb-[max(env(safe-area-inset-bottom),1rem)]">
           <Button onClick={submit} disabled={disabled}>
             → {t('entry.enter_room')}
           </Button>

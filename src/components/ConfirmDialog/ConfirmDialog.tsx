@@ -116,14 +116,14 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
       ) : (
         <Drawer open={open} onOpenChange={onOpenChange}>
           {state && (
-            <DrawerContent className="mx-auto max-w-md">
+            <DrawerContent className="mx-auto max-h-[90dvh] max-w-md">
               <DrawerHeader className="text-center">
                 <DrawerTitle>{title}</DrawerTitle>
-                <DrawerDescription className="whitespace-pre-line text-foreground leading-relaxed">
+                <DrawerDescription className="min-h-0 flex-1 overflow-y-auto whitespace-pre-line text-foreground leading-relaxed">
                   {message}
                 </DrawerDescription>
               </DrawerHeader>
-              <DrawerFooter>
+              <DrawerFooter className="pb-[max(env(safe-area-inset-bottom),1rem)]">
                 <Button
                   variant={isDanger ? 'destructive' : 'default'}
                   onClick={() => respond(true)}
