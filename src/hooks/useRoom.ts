@@ -76,46 +76,87 @@ export function useRoom(
   const joinedRef = useRef(false);
 
   // ---------- 訂閱 room ----------
+  // 注意：onValue 第一次發起時 auth ID token 可能還沒推到 RTDB connection
+  // → server 回 PERMISSION_DENIED → onValue 訂閱 dead 不會自動 retry
+  // 解法：err callback 裡分辨 PERMISSION_DENIED，silent re-subscribe（最多 5 次）
+  // 真正的 error（rules deny / 房間損壞）會等到 retry 用完才往 state 寫
   useEffect(() => {
     if (!pin || !uid) return;
 
     const roomRef = ref(database, `rooms/${pin}`);
-    const unsub = onValue(
-      roomRef,
-      (snap) => {
-        const data = snap.val() as {
-          meta?: RoomMeta;
-          members?: Record<string, Member>;
-        } | null;
+    let unsub: (() => void) | null = null;
+    let retryTimer: number | null = null;
+    let retryCount = 0;
+    const MAX_RETRIES = 5;
+    let cancelled = false;
 
-        if (!data || !data.meta) {
+    const subscribe = () => {
+      if (cancelled) return;
+      unsub = onValue(
+        roomRef,
+        (snap) => {
+          if (cancelled) return;
+          retryCount = 0; // 成功一次就 reset
+          const data = snap.val() as {
+            meta?: RoomMeta;
+            members?: Record<string, Member>;
+          } | null;
+
+          if (!data || !data.meta) {
+            setState({
+              loading: false,
+              exists: false,
+              isCommander: false,
+              meta: null,
+              members: {},
+              error: null,
+            });
+            return;
+          }
+
           setState({
             loading: false,
-            exists: false,
-            isCommander: false,
-            meta: null,
-            members: {},
+            exists: true,
+            isCommander: data.meta.commanderId === uid,
+            meta: data.meta,
+            members: data.members ?? {},
             error: null,
           });
-          return;
+        },
+        (err) => {
+          if (cancelled) return;
+          // PERMISSION_DENIED 通常是 auth token 還沒到位、retry 一下會自然恢復
+          const isPermDenied =
+            err.message?.includes('PERMISSION_DENIED') ||
+            (err as { code?: string }).code === 'PERMISSION_DENIED';
+          if (isPermDenied && retryCount < MAX_RETRIES) {
+            retryCount += 1;
+            logInfo(
+              'useRoom · onValue PERMISSION_DENIED · retry',
+              retryCount,
+              '/',
+              MAX_RETRIES
+            );
+            unsub?.();
+            unsub = null;
+            // exponential backoff: 200, 400, 800, 1600, 3200 ms
+            const delay = 200 * 2 ** (retryCount - 1);
+            retryTimer = window.setTimeout(subscribe, delay);
+            return;
+          }
+          logError('useRoom · onValue error', err);
+          setState((s) => ({ ...s, loading: false, error: err }));
         }
+      );
+    };
 
-        setState({
-          loading: false,
-          exists: true,
-          isCommander: data.meta.commanderId === uid,
-          meta: data.meta,
-          members: data.members ?? {},
-          error: null,
-        });
-      },
-      (err) => {
-        logError('useRoom · onValue error', err);
-        setState((s) => ({ ...s, loading: false, error: err }));
-      }
-    );
+    subscribe();
 
-    return () => unsub();
+    return () => {
+      cancelled = true;
+      if (retryTimer != null) window.clearTimeout(retryTimer);
+      unsub?.();
+    };
   }, [pin, uid]);
 
   // ---------- 建立房間 or 加入現有房間 ----------
