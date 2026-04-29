@@ -1,38 +1,71 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ChevronRight, Trash2 } from 'lucide-react';
 
 import { useConfirm } from '@/components/ConfirmDialog/ConfirmDialog';
-import { formatDuration, formatUtcTime } from '@/lib/time';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { useTimezone } from '@/hooks/useTimezone';
+import { formatDuration, formatTimeInTz } from '@/lib/time';
+import { cn } from '@/lib/utils';
 
-import type { BattleSnapshot, RoomMeta } from '@/types/room';
-
-import styles from './BattleHistory.module.scss';
+import type { BattleSnapshot, MemberStatus, RoomMeta } from '@/types/room';
 
 interface BattleHistoryProps {
   meta: RoomMeta;
   canDelete: boolean;
   onDelete: (battleId: string) => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+function statusColor(status: MemberStatus) {
+  switch (status) {
+    case 'ready':
+      return 'text-success';
+    case 'adjusting':
+      return 'text-warning';
+    default:
+      return 'text-muted-foreground';
+  }
 }
 
 /**
- * 房間內已完成的戰報列表。
- * - 預設摺疊（避免佔螢幕）
- * - 點 header 展開、列出每筆戰報的概要
- * - 點某筆 → 展開看完整車頭名單
+ * 已完成的戰報抽屜 · Sheet 從右側滑入。
+ * 不會擠到主畫面，桌機 / 手機都能看完整。
  */
-export function BattleHistory({ meta, canDelete, onDelete }: BattleHistoryProps) {
+export function BattleHistory({
+  meta,
+  canDelete,
+  onDelete,
+  open,
+  onOpenChange,
+}: BattleHistoryProps) {
   const { t } = useTranslation();
   const confirm = useConfirm();
-  const [expanded, setExpanded] = useState(false);
+  const [tz] = useTimezone();
   const [openBattleId, setOpenBattleId] = useState<string | null>(null);
 
   const order = meta.battleOrder ?? [];
   const battles: BattleSnapshot[] = [...order]
-    .reverse() // 最新的在最上面
+    .reverse()
     .map((id) => meta.battles?.[id])
     .filter((b): b is BattleSnapshot => !!b);
-
-  if (battles.length === 0) return null;
 
   const handleDelete = async (battle: BattleSnapshot) => {
     const ok = await confirm({
@@ -45,146 +78,152 @@ export function BattleHistory({ meta, canDelete, onDelete }: BattleHistoryProps)
   };
 
   return (
-    <section className={styles.section}>
-      <button
-        type="button"
-        className={styles.header}
-        onClick={() => setExpanded((v) => !v)}
-        aria-expanded={expanded}
-      >
-        <span className={styles.headerTitle}>
-          ▌ {t('room.battle_history')}
-          <span className={styles.count}>// {battles.length}</span>
-        </span>
-        <span className={styles.chevron}>{expanded ? '▾' : '▸'}</span>
-      </button>
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="right" className="sm:max-w-2xl">
+        <SheetHeader className="border-b">
+          <SheetTitle className="flex items-center gap-2">
+            {t('room.battle_history')}
+            <Badge variant="secondary" className="font-mono">
+              {battles.length}
+            </Badge>
+          </SheetTitle>
+          <SheetDescription>{t('room.battle_history_desc')}</SheetDescription>
+        </SheetHeader>
 
-      {expanded && (
-        <div className={styles.list}>
-          {battles.map((battle) => {
-            const isOpen = openBattleId === battle.id;
-            const target = battle.targetLandingAt
-              ? formatUtcTime(battle.targetLandingAt)
-              : '--:--:--';
-            const lockedAt = formatUtcTime(battle.lockedAt);
-            const onlineCount = battle.drivers.filter(
-              (d) => d.status !== 'offline'
-            ).length;
+        <div className="flex-1 overflow-y-auto">
+          {battles.length === 0 ? (
+            <div className="text-muted-foreground p-8 text-center text-sm">
+              {t('room.no_battles_yet')}
+            </div>
+          ) : (
+            <div className="flex flex-col">
+              {battles.map((battle) => {
+                const isOpen = openBattleId === battle.id;
+                const target = battle.targetLandingAt
+                  ? formatTimeInTz(battle.targetLandingAt, tz)
+                  : '--:--:--';
+                const lockedAt = formatTimeInTz(battle.lockedAt, tz);
+                const onlineCount = battle.drivers.filter(
+                  (d) => d.status !== 'offline'
+                ).length;
 
-            return (
-              <div key={battle.id} className={styles.item}>
-                <button
-                  type="button"
-                  className={styles.itemHeader}
-                  onClick={() => setOpenBattleId(isOpen ? null : battle.id)}
-                  aria-expanded={isOpen}
-                >
-                  <div className={styles.itemMeta}>
-                    <span
-                      className={`${styles.waveTag} ${!battle.waveName ? styles.waveTagEmpty : ''}`}
+                return (
+                  <div
+                    key={battle.id}
+                    className="not-first:border-t border-border"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setOpenBattleId(isOpen ? null : battle.id)}
+                      aria-expanded={isOpen}
+                      className="hover:bg-accent flex w-full flex-wrap items-center justify-between gap-3 px-4 py-3 text-left text-sm transition-colors"
                     >
-                      {battle.waveName ?? t('room.battle_no_wave')}
-                    </span>
-                    <span className={styles.itemTarget}>
-                      → {target}
-                      {battle.targetLabel && (
-                        <span className={styles.itemLabel}>
-                          {' · '}
-                          {battle.targetLabel}
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="mono-nums text-foreground font-medium">
+                          → {target}
                         </span>
-                      )}
-                    </span>
-                  </div>
-                  <div className={styles.itemRight}>
-                    <span className={styles.itemDrivers}>
-                      {t('room.battle_drivers', {
-                        count: battle.drivers.length,
-                        online: onlineCount,
-                      })}
-                    </span>
-                    <span className={styles.itemLocked}>
-                      {t('room.battle_locked_at', { time: lockedAt })}
-                    </span>
-                    <span className={styles.chevron}>{isOpen ? '▾' : '▸'}</span>
-                  </div>
-                </button>
-
-                {isOpen && (
-                  <div className={styles.detail}>
-                    <table className={styles.driverTable}>
-                      <thead>
-                        <tr>
-                          <th>{t('room.col_driver')}</th>
-                          <th>{t('room.col_march')}</th>
-                          <th>{t('room.col_rally')}</th>
-                          <th>{t('room.col_launch')}</th>
-                          <th>{t('room.col_arrival')}</th>
-                          <th>{t('room.col_status')}</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {[...battle.drivers]
-                          .sort((a, b) => {
-                            if (a.isSuicide !== b.isSuicide) {
-                              return a.isSuicide ? -1 : 1;
-                            }
-                            return b.marchSeconds - a.marchSeconds;
-                          })
-                          .map((d) => {
-                            const rally = d.rallyWindowSeconds ?? 300;
-                            // 舊戰報沒存 arrivalAtMs → fallback 到房間 target
-                            const arrival = d.arrivalAtMs ?? battle.targetLandingAt;
-                            return (
-                              <tr key={d.uid}>
-                                <td>
-                                  <span className={styles.driverName}>{d.name}</span>
-                                  {d.isSuicide && (
-                                    <span className={styles.suicide}>
-                                      {t('room.role_suicide')}
-                                    </span>
-                                  )}
-                                </td>
-                                <td className={styles.mono}>
-                                  {formatDuration(d.marchSeconds)}
-                                </td>
-                                <td className={styles.mono}>{rally / 60}m</td>
-                                <td className={styles.mono}>
-                                  {d.plannedLaunchAt
-                                    ? formatUtcTime(d.plannedLaunchAt)
-                                    : '--:--:--'}
-                                </td>
-                                <td className={`${styles.mono} ${styles.arrival}`}>
-                                  {arrival ? formatUtcTime(arrival) : '--:--:--'}
-                                </td>
-                                <td>
-                                  <span
-                                    className={`${styles.status} ${styles[d.status]}`}
-                                  >
-                                    ● {t(`room.status_${d.status}`)}
-                                  </span>
-                                </td>
-                              </tr>
-                            );
+                        {battle.targetLabel && (
+                          <span className="text-muted-foreground">
+                            · {battle.targetLabel}
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-muted-foreground flex flex-wrap items-center gap-3 text-xs">
+                        <span>
+                          {t('room.battle_drivers', {
+                            count: battle.drivers.length,
+                            online: onlineCount,
                           })}
-                      </tbody>
-                    </table>
+                        </span>
+                        <span>
+                          {t('room.battle_locked_at', { time: lockedAt })}
+                        </span>
+                        <ChevronRight
+                          className={cn(
+                            'size-4 transition-transform',
+                            isOpen && 'rotate-90'
+                          )}
+                        />
+                      </div>
+                    </button>
 
-                    {canDelete && (
-                      <button
-                        type="button"
-                        className={styles.deleteBtn}
-                        onClick={() => handleDelete(battle)}
-                      >
-                        × {t('room.delete_battle')}
-                      </button>
+                    {isOpen && (
+                      <div className="bg-muted/30 border-t border-border p-4">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>{t('room.col_driver')}</TableHead>
+                              <TableHead>{t('room.col_march')}</TableHead>
+                              <TableHead>{t('room.col_rally')}</TableHead>
+                              <TableHead>{t('room.col_launch')}</TableHead>
+                              <TableHead>{t('room.col_arrival')}</TableHead>
+                              <TableHead>{t('room.col_status')}</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {[...battle.drivers]
+                              .sort((a, b) => b.marchSeconds - a.marchSeconds)
+                              .map((d) => {
+                                const rally = d.rallyWindowSeconds ?? 300;
+                                const arrival =
+                                  d.arrivalAtMs ?? battle.targetLandingAt;
+                                return (
+                                  <TableRow key={d.uid}>
+                                    <TableCell>
+                                      <span className="text-foreground font-medium">
+                                        {d.name}
+                                      </span>
+                                    </TableCell>
+                                    <TableCell className="mono-nums">
+                                      {formatDuration(d.marchSeconds)}
+                                    </TableCell>
+                                    <TableCell className="mono-nums">
+                                      {rally / 60}m
+                                    </TableCell>
+                                    <TableCell className="mono-nums">
+                                      {d.plannedLaunchAt
+                                        ? formatTimeInTz(d.plannedLaunchAt, tz)
+                                        : '--:--:--'}
+                                    </TableCell>
+                                    <TableCell className="mono-nums text-primary font-medium">
+                                      {arrival
+                                        ? formatTimeInTz(arrival, tz)
+                                        : '--:--:--'}
+                                    </TableCell>
+                                    <TableCell
+                                      className={cn(
+                                        'text-xs',
+                                        statusColor(d.status)
+                                      )}
+                                    >
+                                      ● {t(`room.status_${d.status}`)}
+                                    </TableCell>
+                                  </TableRow>
+                                );
+                              })}
+                          </TableBody>
+                        </Table>
+
+                        {canDelete && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDelete(battle)}
+                            className="text-destructive hover:bg-destructive/10 hover:text-destructive border-destructive/30 mt-3"
+                          >
+                            <Trash2 />
+                            {t('room.delete_battle')}
+                          </Button>
+                        )}
+                      </div>
                     )}
                   </div>
-                )}
-              </div>
-            );
-          })}
+                );
+              })}
+            </div>
+          )}
         </div>
-      )}
-    </section>
+      </SheetContent>
+    </Sheet>
   );
 }

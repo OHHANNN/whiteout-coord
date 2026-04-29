@@ -41,9 +41,8 @@ export interface BattleDriver {
   rallyWindowSeconds?: number;
   /** 計算後的發車時間 (= 落地 − 行軍 − 集結) */
   plannedLaunchAt: number | null;
-  /** 預計落地時間 (= 房間 targetLandingAt，未來若加 suicide offset 可在這設不同值) */
+  /** 預計落地時間 (= 房間 targetLandingAt + landingOffset) */
   arrivalAtMs?: number | null;
-  isSuicide: boolean;
   /** 鎖定那一刻的狀態 */
   status: MemberStatus;
 }
@@ -89,7 +88,6 @@ export interface RoomMeta {
 export interface Member {
   name: string;
   role: MemberRole;
-  isSuicide: boolean;
   marchSeconds: number;
   status: MemberStatus;
   lastSeen: number;
@@ -106,7 +104,7 @@ export interface Member {
   rallyWindowSeconds?: number;
   /**
    * 落地偏移（秒）。預設 0 = 跟主目標同時落地。
-   * 負值 = 提前落地（首發車吸盾 -2s）；正值 = 延後落地。
+   * 負值 = 提前落地（先鋒吸盾 -2s）；正值 = 延後落地。
    * 實際落地 = target_landing + landingOffsetSeconds
    * 發車   = target_landing + landingOffsetSeconds − march − rally
    */

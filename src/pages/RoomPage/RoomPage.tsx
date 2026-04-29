@@ -1,35 +1,44 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Navigate, useNavigate, useParams } from 'react-router-dom';
+import { toast } from 'sonner';
+import { History, Lock, Share2 } from 'lucide-react';
 
 import { AddDriverModal } from '@/components/AddDriverModal/AddDriverModal';
 import { BattleHistory } from '@/components/BattleHistory/BattleHistory';
-import { Button } from '@/components/Button/Button';
 import { CommanderPanel } from '@/components/CommanderPanel/CommanderPanel';
 import { useConfirm } from '@/components/ConfirmDialog/ConfirmDialog';
 import { DriverTable } from '@/components/DriverTable/DriverTable';
-import { PassengerList } from '@/components/PassengerList/PassengerList';
-import { LangSwitch } from '@/components/LangSwitch/LangSwitch';
-import { MuteToggle } from '@/components/MuteToggle/MuteToggle';
 import { NamePrompt } from '@/components/NamePrompt/NamePrompt';
-import { Panel } from '@/components/Panel/Panel';
-import { Toast } from '@/components/Toast/Toast';
+import { SettingsMenu } from '@/components/SettingsMenu/SettingsMenu';
+import { PassengerList } from '@/components/PassengerList/PassengerList';
 import { UtcClock } from '@/components/UtcClock/UtcClock';
-
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/hooks/useAuth';
-import { useLaunchAlert } from '@/hooks/useLaunchAlert';
+import { useCountdownAlert } from '@/hooks/useCountdownAlert';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useRoom } from '@/hooks/useRoom';
 import { beep, unlockAudio } from '@/lib/audio';
-
-import styles from './RoomPage.module.scss';
+import { cn } from '@/lib/utils';
 
 import type { ParticipantType } from '@/types/room';
 
 const PIN_REGEX = /^[0-9]{8}$/;
-const NAME_STORAGE_KEY = 'whiteout-coord:name';
+// session：把「名字」綁定到「特定 PIN」。進入不同 PIN 一定會跳 NamePrompt 確認。
+// 離開 / 被踢時清空 session、其他路徑（直接改 URL、跨房間連結）也會被 PIN 不匹配條件擋下來。
+const SESSION_KEY = 'whiteout-coord:session';
+// 上次輸入過的名字寫在 'whiteout-coord:last-name'，由 EntryPage drawer 流程讀寫，RoomPage 不需要引用。
 const TYPE_STORAGE_KEY = 'whiteout-coord:type';
 const MUTE_STORAGE_KEY = 'whiteout-coord:muted';
+
+interface RoomSession {
+  pin: string;
+  name: string;
+}
 
 export function RoomPage() {
   const { pin } = useParams<{ pin: string }>();
@@ -37,15 +46,25 @@ export function RoomPage() {
   const navigate = useNavigate();
   const { user, error: authError } = useAuth();
   const confirm = useConfirm();
-  const [storedName, setStoredName] = useLocalStorage<string>(NAME_STORAGE_KEY, '');
+  const [session, setSession] = useLocalStorage<RoomSession | null>(
+    SESSION_KEY,
+    null
+  );
   const [storedType, setStoredType] = useLocalStorage<ParticipantType>(
     TYPE_STORAGE_KEY,
     'driver'
   );
+
+  // 只有當 session.pin 跟現在 URL 的 pin 一樣時才當「已確認名字」用
+  // 任何 PIN 不匹配（直接改網址、跨房間分享、refresh 進不同 PIN）都會 fall through 到 NamePrompt
+  const storedName = session && session.pin === pin ? session.name : '';
   const [muted, setMuted] = useLocalStorage<boolean>(MUTE_STORAGE_KEY, false);
-  const [toast, setToast] = useState<{ msg: string; variant: 'success' | 'error' } | null>(null);
   // null = 關閉；'add' = 開啟新增 modal；其他字串 = 編輯該 uid 的代管車頭
   const [driverModalState, setDriverModalState] = useState<'add' | string | null>(null);
+  // 自己改名 + 角色切換用 NamePrompt
+  const [renameMeOpen, setRenameMeOpen] = useState(false);
+  // 戰報歷史 sheet（從右側滑入）
+  const [battleHistoryOpen, setBattleHistoryOpen] = useState(false);
 
   const {
     loading,
@@ -60,10 +79,6 @@ export function RoomPage() {
     removeMember,
     leaveRoom,
     addManualMember,
-    saveCurrentWave,
-    loadWave,
-    deleteWave,
-    renameWave,
     startBattle,
     deleteBattle,
   } = useRoom(pin, user?.uid, storedName, storedType);
@@ -102,24 +117,46 @@ export function RoomPage() {
 
   // === 以下 hook 必須在所有 early return 之前呼叫（React rules of hooks）===
   const me = user?.uid ? members[user.uid] : null;
-  // 發車 = 目標落地 + 偏移 − 行軍 − 集結
   const myLaunchAtMs =
     me && me.rallying !== false && meta?.targetLandingAt != null
       ? meta.targetLandingAt +
         (me.landingOffsetSeconds ?? 0) * 1000 -
         (me.marchSeconds + (me.rallyWindowSeconds ?? 300)) * 1000
       : null;
-  useLaunchAlert(myLaunchAtMs, !muted);
+  // 自己的落地時間（含 offset），用於抵達倒數提醒
+  const myArrivalAtMs =
+    meta?.targetLandingAt != null
+      ? meta.targetLandingAt + (me?.landingOffsetSeconds ?? 0) * 1000
+      : null;
+  // 反集結模式：當有人標為 counterRally 時，「不是反集結」的車頭不參加當下倒數
+  // → 這個作戰是給反集結者的、其他人不需要 alert（他們可能在城內守城）
+  const hasCounterRally = useMemo(
+    () => Object.values(members).some((m) => m.counterRally === true),
+    [members]
+  );
+  const iAmCounterRally = me?.counterRally === true;
+  const alertEnabled = !muted && (!hasCounterRally || iAmCounterRally);
 
-  // 非法 PIN → navigate 到進入頁（side-effect 必須在 useEffect 裡，不能在 render 中）
+  useCountdownAlert(alertEnabled ? myLaunchAtMs : null, alertEnabled);
+  // 抵達倒數提醒：跟 launch 至少差 10 秒才獨立 alert，避免 launch / arrival 過近時兩組嗶音重疊
+  const launchArrivalGapMs =
+    myLaunchAtMs != null && myArrivalAtMs != null
+      ? myArrivalAtMs - myLaunchAtMs
+      : null;
+  const arrivalAlertTarget =
+    launchArrivalGapMs == null || launchArrivalGapMs > 10_000
+      ? myArrivalAtMs
+      : null;
+  useCountdownAlert(alertEnabled ? arrivalAlertTarget : null, alertEnabled);
+
   const pinInvalid = !pin || !PIN_REGEX.test(pin);
   useEffect(() => {
     if (pinInvalid) navigate('/', { replace: true });
   }, [pinInvalid, navigate]);
 
   // 偵測「我曾經是 member、現在不見了」= 被踢出 → 跳回進入頁
-  // wasMemberRef：曾經在房內、即使被踢出後仍為 true
-  // isLeavingRef：自己主動離開（按「離開」按鈕）→ 跳過踢出偵測
+  // 加 grace period：Firebase reconnect 時 members 可能短暫變空、不能立刻判定被踢
+  // 必須 members 連續「不包含自己」超過 1.5 秒才確認是真的被踢
   const wasMemberRef = useRef(false);
   const isLeavingRef = useRef(false);
   useEffect(() => {
@@ -128,17 +165,20 @@ export function RoomPage() {
       wasMemberRef.current = true;
       return;
     }
-    if (wasMemberRef.current) {
-      // 我曾經在、現在不見 → 被指揮官踢
-      setToast({ msg: t('room.kicked'), variant: 'error' });
-      const id = window.setTimeout(() => navigate('/', { replace: true }), 1800);
-      return () => window.clearTimeout(id);
-    }
-    return;
+    if (!wasMemberRef.current) return;
+
+    // 已經是 member 了卻消失 → 啟動 1.5s grace timer 確認真的被踢、不是 reconnect 抖動
+    const confirmTimer = window.setTimeout(() => {
+      setSession(null);
+      toast.error(t('room.kicked'));
+      window.setTimeout(() => navigate('/', { replace: true }), 1800);
+    }, 1500);
+    return () => window.clearTimeout(confirmTimer);
+    // setStoredName 來自 useLocalStorage、會在 storage 變動時 re-create、加進 deps 會無限重跑 → 故意省略
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [members, user, meta, navigate, t]);
 
-  // 自動清除：指揮官進房 3 秒後一次性檢查、踢掉離線 > 24h 的車頭
-  // 用 ref 避免 members 變動時無限重跑
+  // 自動清除：指揮官進房 3 秒後一次性檢查、清掉離線 > 5h 的車頭
   const cleanedRef = useRef(false);
   useEffect(() => {
     if (!isCommander || !meta || cleanedRef.current) return;
@@ -147,11 +187,10 @@ export function RoomPage() {
       if (cleanedRef.current) return;
       cleanedRef.current = true;
 
-      const STALE_MS = 5 * 60 * 60 * 1000; // 5 小時（對齊決戰王城活動長度）
+      const STALE_MS = 5 * 60 * 60 * 1000;
       const now = Date.now();
       const staleRealUids: string[] = [];
 
-      // 1. 找出真人車頭裡離線過久的（manual 不參與時間判斷 → 永遠不在這份清單）
       Object.entries(members).forEach(([uid, m]) => {
         if (uid === meta.commanderId) return;
         if (m.isManual) return;
@@ -162,8 +201,6 @@ export function RoomPage() {
 
       const toRemove: string[] = [...staleRealUids];
 
-      // 2. 把這次要清的真人扣掉後，commander 以外是否還有真人留著？
-      //    都沒有 → 連 manual 一起清空（避免代管條目永遠殘留)
       const remainingNonCommanderReal = Object.entries(members).filter(
         ([uid, m]) =>
           uid !== meta.commanderId &&
@@ -183,100 +220,60 @@ export function RoomPage() {
           /* 寫入失敗不影響主流程，logger 會記 */
         })
       );
-      setToast({
-        msg: t('room.auto_cleaned', { count: toRemove.length }),
-        variant: 'success',
-      });
+      toast.success(t('room.auto_cleaned', { count: toRemove.length }));
     }, 3000);
 
     return () => window.clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isCommander, meta?.commanderId]);
 
-  // 非法 PIN → 已在 effect 中導向進入頁，這裡 hard return 讓 TS narrow type
   if (pinInvalid || !pin) return null;
 
-  // 還沒取得名字 → 先 prompt
+  // 還沒取得名字（session 沒綁這個 PIN，例如直接打 URL 或剛被踢）
+  // → 導回 EntryPage 並把 PIN 帶過去、由那邊的 drawer 流程處理
   if (!storedName) {
+    return <Navigate to={`/?pin=${pin}`} replace />;
+  }
+
+  if (authError) {
     return (
-      <NamePrompt
-        initialName=""
-        initialType={storedType}
-        onSubmit={(name, type) => {
-          setStoredType(type);
-          setStoredName(name);
-        }}
-        pin={pin}
+      <ErrorScreen
+        title={t('error.auth_failed')}
+        detail={authError.message}
+        actionLabel={`↻ ${t('error.retry')}`}
+        onAction={() => window.location.reload()}
       />
     );
   }
 
-  // 認證失敗 → 顯示錯誤 + 重試
-  if (authError) {
-    return (
-      <div className={styles.loadingWrap}>
-        <div className={styles.errorBox}>
-          <div className={styles.errorTitle}>{t('error.auth_failed')}</div>
-          <div className={styles.errorDetail}>{authError.message}</div>
-          <button
-            type="button"
-            className={styles.errorBtn}
-            onClick={() => window.location.reload()}
-          >
-            ↻ {t('error.retry')}
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // 訂閱房間出錯（rules 拒絕、網路問題）
   if (roomError) {
     return (
-      <div className={styles.loadingWrap}>
-        <div className={styles.errorBox}>
-          <div className={styles.errorTitle}>{t('error.room_load_failed')}</div>
-          <div className={styles.errorDetail}>{roomError.message}</div>
-          <button
-            type="button"
-            className={styles.errorBtn}
-            onClick={() => navigate('/')}
-          >
-            ← {t('error.back_to_entry')}
-          </button>
-        </div>
-      </div>
+      <ErrorScreen
+        title={t('error.room_load_failed')}
+        detail={roomError.message}
+        actionLabel={`← ${t('error.back_to_entry')}`}
+        onAction={() => navigate('/')}
+      />
     );
   }
 
   if (loading || !user) {
     return (
-      <div className={styles.loadingWrap}>
-        <div className={styles.loadingText}>{t('room.loading')}</div>
-        <button
-          type="button"
-          className={styles.escapeBtn}
-          onClick={() => navigate('/', { replace: true })}
-        >
-          ← {t('error.back_to_entry')}
-        </button>
-      </div>
+      <LoadingScreen
+        text={t('room.loading')}
+        backLabel={`← ${t('error.back_to_entry')}`}
+        onBack={() => navigate('/', { replace: true })}
+      />
     );
   }
 
   if (!meta) {
-    // 這種情況罕見 — useRoom 會自動建立房間
     return (
-      <div className={styles.loadingWrap}>
-        <div className={styles.loadingText}>{t('room.initializing')}</div>
-        <button
-          type="button"
-          className={styles.escapeBtn}
-          onClick={() => navigate('/', { replace: true })}
-        >
-          ← {t('error.back_to_entry')}
-        </button>
-      </div>
+      <LoadingScreen
+        text={t('room.initializing')}
+        backLabel={`← ${t('error.back_to_entry')}`}
+        onBack={() => navigate('/', { replace: true })}
+      />
     );
   }
 
@@ -284,7 +281,6 @@ export function RoomPage() {
     Object.entries(members).find(([, m]) => m.role === 'commander')?.[1].name ?? '—';
 
   const handleLeave = async () => {
-    // 指揮官 + 房裡還有其他人 → 加強警告
     const others = user?.uid
       ? Object.keys(members).filter((uid) => uid !== user.uid).length
       : 0;
@@ -302,34 +298,32 @@ export function RoomPage() {
     try {
       await leaveRoom();
     } catch {
-      // 即使 Firebase 寫入失敗也讓使用者離開頁面、不要卡住
+      /* 即使 Firebase 寫入失敗也讓使用者離開頁面、不要卡住 */
     }
-    setStoredName(storedName); // 保留名字方便下次
+    // 清掉當前 session、下次進房會再 prompt（lastUsedName 留著當預設值）
+    setSession(null);
     navigate('/', { replace: true });
   };
 
   const handleShare = async () => {
-    // 分享完整網址，對方點連結直接進房（不用手動輸 PIN）
     const url = `${window.location.origin}${import.meta.env.BASE_URL}room/${pin}`;
     const title = t('brand.title');
     const text = `${title} · PIN ${pin}`;
 
-    // 手機優先用原生 share 選單
     if (typeof navigator.share === 'function') {
       try {
         await navigator.share({ title, text, url });
         return;
       } catch (err) {
-        // User cancelled or failed → fall through to clipboard
         if (err instanceof Error && err.name === 'AbortError') return;
       }
     }
 
     try {
       await navigator.clipboard.writeText(url);
-      setToast({ msg: `✓ ${t('room.copied')}`, variant: 'success' });
+      toast.success(t('room.copied'));
     } catch {
-      setToast({ msg: `✗ ${t('room.copy_failed')}`, variant: 'error' });
+      toast.error(t('room.copy_failed'));
     }
   };
 
@@ -342,16 +336,8 @@ export function RoomPage() {
     }
   };
 
-  const handleSetSuicide = (targetUid: string, value: boolean) => {
-    if (targetUid === user?.uid) {
-      updateMyMember({ isSuicide: value });
-    } else if (isCommander) {
-      updateMember(targetUid, { isSuicide: value });
-    }
-  };
-
   const handleSetRally = (targetUid: string, seconds: number) => {
-    const next = seconds === 600 ? 600 : 300; // 只接受 5 或 10 分鐘
+    const next = seconds === 600 ? 600 : 300;
     if (targetUid === user?.uid) {
       updateMyMember({ rallyWindowSeconds: next });
     } else if (isCommander) {
@@ -392,7 +378,7 @@ export function RoomPage() {
     });
     if (!ok) return;
     transferCommander(targetUid).catch(() =>
-      setToast({ msg: t('error.transfer_failed'), variant: 'error' })
+      toast.error(t('error.transfer_failed'))
     );
   };
 
@@ -407,18 +393,17 @@ export function RoomPage() {
     });
     if (!ok) return;
     removeMember(targetUid).catch(() =>
-      setToast({ msg: t('error.remove_failed'), variant: 'error' })
+      toast.error(t('error.remove_failed'))
     );
   };
 
-  // 代管車頭：新增 / 編輯共用同一個 modal
+  // 代管車頭：新增 / 編輯共用 modal
   const editingManualMember =
     driverModalState && driverModalState !== 'add'
       ? members[driverModalState]
       : null;
 
   const handleSubmitManual = async (name: string, marchSeconds: number) => {
-    // 失敗時 throw 帶 i18n 訊息的 Error，modal 會顯示在 inline error 區
     if (driverModalState === 'add') {
       try {
         await addManualMember(name, marchSeconds);
@@ -456,16 +441,14 @@ export function RoomPage() {
     });
     if (!ok) return;
     transferCommander(user.uid).catch(() =>
-      setToast({ msg: t('error.transfer_failed'), variant: 'error' })
+      toast.error(t('error.transfer_failed'))
     );
   };
 
-  // 靜音 toggle / 任何點擊都順便解鎖 AudioContext（瀏覽器要求使用者互動才允許播放）
   const handleToggleMute = (next: boolean) => {
     setMuted(next);
     if (!next) {
       unlockAudio();
-      // 從靜音切到開啟時 → 立刻播一聲 test beep 讓使用者確認音效有作用
       window.setTimeout(() => beep(880, 0.18, 0.4), 120);
     }
   };
@@ -474,12 +457,10 @@ export function RoomPage() {
   };
 
   return (
-    <div className={styles.page} onClick={handlePageClick}>
-      <Toast
-        message={toast?.msg ?? null}
-        variant={toast?.variant}
-        onClose={() => setToast(null)}
-      />
+    <div
+      className="bg-background min-h-screen w-full"
+      onClick={handlePageClick}
+    >
       <AddDriverModal
         open={driverModalState !== null}
         mode={driverModalState === 'add' ? 'add' : 'edit'}
@@ -488,123 +469,214 @@ export function RoomPage() {
         onClose={() => setDriverModalState(null)}
         onSubmit={handleSubmitManual}
       />
-      <Panel label={`ROOM · ${pin}`} labelRight="BRIDGE // LIVE">
-        <header className={styles.header}>
-          <div className={styles.headLeft}>
-            <div className={styles.pinBadge}>
-              <span className={styles.liveDot} />
-              PIN · {pin.slice(0, 4)}·{pin.slice(4)}
-            </div>
-            <div className={styles.meta}>
-              <span>
-                {t('room.commander')}{' '}
-                <b className={commanderAbsent || commanderStale ? styles.locked : ''}>
-                  {commanderAbsent ? t('room.commander_left') : commanderName}
-                </b>
-                {commanderStale && (
-                  <span className={styles.locked}>
-                    {' '}
-                    · {t('room.commander_offline')}
-                  </span>
-                )}
-              </span>
-              <span>
-                {t('room.drivers_online', {
-                  count: rallyingCount,
-                  online: onlineCount,
-                })}
-              </span>
-              {meta.locked && <span className={styles.locked}>🔒 LOCKED</span>}
-              {canClaimCommander && (
-                <Button variant="primary" size="sm" onClick={handleClaim}>
-                  {t('room.claim_commander')}
-                </Button>
-              )}
-            </div>
-          </div>
-          <div className={styles.headRight}>
-            <UtcClock size="sm" showLabel={false} />
-            <MuteToggle muted={muted} onChange={handleToggleMute} />
-            <LangSwitch />
-            <Button variant="ghost" size="sm" onClick={handleShare}>
-              {t('room.share_pin')}
-            </Button>
-            <Button variant="danger" size="sm" onClick={handleLeave}>
-              {t('room.leave')}
-            </Button>
-          </div>
-        </header>
 
-        <div className={styles.body}>
+      {/* 自己改名 + 改類型 · 重用 NamePrompt */}
+      {pin && me && (
+        <NamePrompt
+          open={renameMeOpen}
+          onOpenChange={setRenameMeOpen}
+          pin={pin}
+          initialName={me.name}
+          initialType={me.participantType ?? 'driver'}
+          onSubmit={(name, type) => {
+            updateMyMember({ name, participantType: type });
+            setSession({ pin, name });
+            setRenameMeOpen(false);
+          }}
+        />
+      )}
+
+      {/* sticky header */}
+      <header className="bg-background/95 supports-[backdrop-filter]:bg-background/80 sticky top-0 z-30 w-full border-b backdrop-blur">
+        <div className="mx-auto flex h-14 max-w-7xl items-center gap-3 px-4 sm:px-6">
+          {/* PIN badge */}
+          <div className="flex items-center gap-2">
+            <span className="bg-success size-2 animate-pulse rounded-full" />
+            <span className="text-foreground mono-nums text-sm font-semibold tracking-wider">
+              {pin.slice(0, 4)}·{pin.slice(4)}
+            </span>
+          </div>
+
+          <Separator orientation="vertical" className="hidden sm:block h-6" />
+
+          {/* commander info */}
+          <div className="text-muted-foreground hidden min-w-0 flex-1 items-center gap-3 text-xs sm:flex">
+            <span className="truncate">
+              <span className="mr-2">{t('room.commander')}</span>
+              <span
+                className={cn(
+                  'text-foreground font-medium',
+                  (commanderAbsent || commanderStale) && 'text-warning'
+                )}
+              >
+                {commanderAbsent ? t('room.commander_left') : commanderName}
+              </span>
+              {commanderStale && (
+                <span className="text-warning"> · {t('room.commander_offline')}</span>
+              )}
+            </span>
+            <span className="whitespace-nowrap">
+              {t('room.drivers_online', {
+                count: rallyingCount,
+                online: onlineCount,
+              })}
+            </span>
+            {meta.locked && (
+              <Badge variant="outline" className="border-warning text-warning">
+                <Lock className="size-3" />
+                LOCKED
+              </Badge>
+            )}
+            {canClaimCommander && (
+              <Button size="sm" onClick={handleClaim}>
+                {t('room.claim_commander')}
+              </Button>
+            )}
+          </div>
+
+          {/* fill spacer on mobile */}
+          <div className="flex-1 sm:hidden" />
+
+          {/* right: clock + share + settings */}
+          <div className="flex items-center gap-1">
+            <UtcClock size="sm" showLabel={false} />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleShare}
+              aria-label={t('room.share_pin')}
+              title={t('room.share_pin')}
+            >
+              <Share2 />
+            </Button>
+            <SettingsMenu
+              muted={muted}
+              onToggleMute={handleToggleMute}
+              onLeave={handleLeave}
+            />
+          </div>
+        </div>
+
+        {/* mobile commander info row */}
+        <div className="text-muted-foreground flex items-center gap-3 px-4 pb-2 text-xs sm:hidden">
+          <span>
+            <span className="mr-2">{t('room.commander')}</span>
+            <span
+              className={cn(
+                'text-foreground font-medium',
+                (commanderAbsent || commanderStale) && 'text-warning'
+              )}
+            >
+              {commanderAbsent ? t('room.commander_left') : commanderName}
+            </span>
+          </span>
+          <span>
+            {t('room.drivers_online', {
+              count: rallyingCount,
+              online: onlineCount,
+            })}
+          </span>
+          {meta.locked && (
+            <Badge variant="outline" className="border-warning text-warning">
+              <Lock className="size-3" />
+              LOCKED
+            </Badge>
+          )}
+        </div>
+      </header>
+
+      {/* body */}
+      <main className="mx-auto max-w-7xl p-4 sm:p-6">
+        <div className="grid gap-6 lg:grid-cols-[340px_1fr]">
           <CommanderPanel
             meta={meta}
             canEdit={isCommander}
-            myLaunchAtMs={myLaunchAtMs}
+            myArrivalAtMs={myArrivalAtMs}
             onUpdate={(patch) => {
-              // 從未鎖 → 鎖定 = 啟動戰報 snapshot
               if (patch.locked === true && !meta.locked) {
                 startBattle().catch(() =>
-                  setToast({ msg: t('error.start_battle_failed'), variant: 'error' })
+                  toast.error(t('error.start_battle_failed'))
                 );
                 return;
               }
               updateMeta(patch);
             }}
-            onSaveWave={(name) =>
-              saveCurrentWave(name).catch(() =>
-                setToast({ msg: t('error.save_wave_failed'), variant: 'error' })
-              )
-            }
-            onLoadWave={(id) =>
-              loadWave(id).catch(() =>
-                setToast({ msg: t('error.load_wave_failed'), variant: 'error' })
-              )
-            }
-            onDeleteWave={(id) =>
-              deleteWave(id).catch(() =>
-                setToast({ msg: t('error.delete_wave_failed'), variant: 'error' })
-              )
-            }
-            onRenameWave={(id, name) =>
-              renameWave(id, name).catch(() =>
-                setToast({ msg: t('error.rename_wave_failed'), variant: 'error' })
-              )
-            }
           />
 
-          <main className={styles.main}>
-            <div className={styles.toolbar}>
-              <h2 className={styles.title}>
-                {t('room.driver_list')}
-                <span className={styles.sub}>// {rallyingCount} ACTIVE</span>
-              </h2>
-              {me && !meta.locked && isCommander && (
-                <div className={styles.myActions}>
+          <section className="flex min-w-0 flex-col gap-4">
+            {/* toolbar — 用 Card 樣式跟左欄對齊 */}
+            <div className="bg-card text-card-foreground flex flex-wrap items-center justify-between gap-3 rounded-xl border px-6 py-5 shadow-sm">
+              <div className="flex items-baseline gap-2">
+                <h2 className="text-lg font-semibold">{t('room.driver_list')}</h2>
+                <span className="text-muted-foreground text-sm">
+                  · {rallyingCount} active
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                {(meta.battleOrder?.length ?? 0) > 0 && (
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
-                    onClick={() => setDriverModalState('add')}
-                    title={t('room.add_driver_hint')}
+                    onClick={() => setBattleHistoryOpen(true)}
+                    title={t('room.battle_history')}
                   >
-                    {t('room.add_driver_btn')}
+                    <History />
+                    {t('room.battle_history')}
+                    <span className="text-muted-foreground mono-nums ml-1">
+                      {meta.battleOrder?.length ?? 0}
+                    </span>
                   </Button>
-                  <label className={styles.check} title={t('room.rallying_hint')}>
-                    <input
-                      type="checkbox"
-                      checked={me.rallying !== false}
-                      onChange={(e) =>
-                        updateMyMember({ rallying: e.target.checked })
-                      }
-                    />
-                    {t('room.rallying_check')}
-                  </label>
-                </div>
-              )}
+                )}
+                {me && !meta.locked && isCommander && (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setDriverModalState('add')}
+                      title={t('room.add_driver_hint')}
+                    >
+                      {t('room.add_driver_btn')}
+                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="rallying"
+                        checked={me.rallying !== false}
+                        onCheckedChange={(c) =>
+                          updateMyMember({ rallying: c !== false })
+                        }
+                      />
+                      <Label
+                        htmlFor="rallying"
+                        className="text-sm font-normal cursor-pointer"
+                        title={t('room.rallying_hint')}
+                      >
+                        {t('room.rallying_check')}
+                      </Label>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
 
             {me?.rallying === false && (
-              <div className={styles.coordinatorBanner}>
-                {t('room.coordinator_only')} · {t('room.coordinator_desc')}
+              <div className="border-primary/30 bg-primary/5 text-muted-foreground rounded-md border border-dashed p-3 text-center text-sm">
+                <span className="text-foreground font-medium">
+                  {t('room.coordinator_only')}
+                </span>{' '}
+                · {t('room.coordinator_desc')}
+              </div>
+            )}
+
+            {/* 反集結模式提示（任一人 counterRally === true）*/}
+            {hasCounterRally && (
+              <div className="border-warning/40 bg-warning/10 text-muted-foreground rounded-md border border-dashed p-3 text-center text-sm">
+                <span className="text-warning font-medium">
+                  {t('room.counter_rally_mode')}
+                </span>{' '}
+                ·{' '}
+                {iAmCounterRally
+                  ? t('room.counter_rally_active_self')
+                  : t('room.counter_rally_passive_self')}
               </div>
             )}
 
@@ -613,7 +685,6 @@ export function RoomPage() {
               meta={meta}
               myUid={user.uid}
               onSetMarch={handleSetMarch}
-              onSetSuicide={handleSetSuicide}
               onSetRally={handleSetRally}
               onSetOffset={handleSetOffset}
               onSetType={handleSetType}
@@ -625,6 +696,8 @@ export function RoomPage() {
               onEditManual={
                 isCommander ? (uid) => setDriverModalState(uid) : undefined
               }
+              onRenameMe={() => setRenameMeOpen(true)}
+              hasCounterRally={hasCounterRally}
               canRemove={isCommander}
               canEditOthers={isCommander}
             />
@@ -636,27 +709,74 @@ export function RoomPage() {
               canRemove={isCommander}
               onPromoteToDriver={(uid) => handleSetType(uid, 'driver')}
               onRemove={handleRemoveMember}
+              onRenameMe={() => setRenameMeOpen(true)}
             />
 
             {meta.locked && (
-              <div className={styles.lockedBanner}>{t('room.locked_banner')}</div>
+              <div className="border-warning bg-warning/10 text-warning rounded-md border p-3 text-center text-sm">
+                {t('room.locked_banner')}
+              </div>
             )}
-
-            <BattleHistory
-              meta={meta}
-              canDelete={isCommander}
-              onDelete={(id) =>
-                deleteBattle(id).catch(() =>
-                  setToast({
-                    msg: t('error.delete_battle_failed'),
-                    variant: 'error',
-                  })
-                )
-              }
-            />
-          </main>
+          </section>
         </div>
-      </Panel>
+      </main>
+
+      <BattleHistory
+        meta={meta}
+        canDelete={isCommander}
+        onDelete={(id) =>
+          deleteBattle(id).catch(() =>
+            toast.error(t('error.delete_battle_failed'))
+          )
+        }
+        open={battleHistoryOpen}
+        onOpenChange={setBattleHistoryOpen}
+      />
+    </div>
+  );
+}
+
+// === Helper components for loading / error screens ===
+
+function LoadingScreen({
+  text,
+  backLabel,
+  onBack,
+}: {
+  text: string;
+  backLabel: string;
+  onBack: () => void;
+}) {
+  return (
+    <div className="bg-background flex min-h-screen flex-col items-center justify-center gap-6 p-6">
+      <div className="text-muted-foreground text-sm tracking-widest uppercase animate-pulse">
+        {text}
+      </div>
+      <Button variant="outline" size="sm" onClick={onBack}>
+        {backLabel}
+      </Button>
+    </div>
+  );
+}
+
+function ErrorScreen({
+  title,
+  detail,
+  actionLabel,
+  onAction,
+}: {
+  title: string;
+  detail: string;
+  actionLabel: string;
+  onAction: () => void;
+}) {
+  return (
+    <div className="bg-background flex min-h-screen items-center justify-center p-6">
+      <div className="border-destructive bg-card flex w-full max-w-md flex-col gap-4 rounded-lg border p-6 text-center">
+        <h1 className="text-destructive text-base font-semibold">{title}</h1>
+        <p className="text-muted-foreground text-sm break-words">{detail}</p>
+        <Button onClick={onAction}>{actionLabel}</Button>
+      </div>
     </div>
   );
 }

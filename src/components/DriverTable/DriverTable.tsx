@@ -1,29 +1,47 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Minus, Plus, Zap } from 'lucide-react';
 
-import { RowActionsMenu, type ActionItem } from '@/components/RowActionsMenu/RowActionsMenu';
+import {
+  RowActionsMenu,
+  type ActionItem,
+} from '@/components/RowActionsMenu/RowActionsMenu';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useNow } from '@/hooks/useServerTime';
-import { formatDuration, formatUtcTime, parseMarchInput } from '@/lib/time';
+import { useTimezone } from '@/hooks/useTimezone';
+import { formatDuration, formatTimeInTz, parseMarchInput } from '@/lib/time';
+import { cn } from '@/lib/utils';
 
-import type { DriverView, Member, RoomMeta } from '@/types/room';
+import type { DriverView, Member, MemberStatus, RoomMeta } from '@/types/room';
 import { getLaunchAtMs } from '@/types/room';
-
-import styles from './DriverTable.module.scss';
 
 interface DriverTableProps {
   members: Record<string, Member>;
   meta: RoomMeta;
   myUid: string;
   onSetMarch: (uid: string, seconds: number) => void;
-  onSetSuicide: (uid: string, value: boolean) => void;
   onSetRally: (uid: string, seconds: number) => void;
   onSetOffset: (uid: string, seconds: number) => void;
   onSetType: (uid: string, type: 'driver' | 'passenger') => void;
   onSetCounterRally: (uid: string, value: boolean) => void;
   onRemove: (uid: string) => void;
   onTransferCommander?: (uid: string, name: string) => void;
-  /** 編輯代管車頭（重命名 / 改行軍）→ 開 modal。只有 commander 才會傳。 */
   onEditManual?: (uid: string) => void;
+  /** 自己改名 + 類型（重用 NamePrompt） */
+  onRenameMe?: () => void;
+  /** 房間目前是否處於「反集結模式」（任一人 counterRally === true）·
+   *  非反集結 row 在 UI 上會降透明度提示「不參與當下作戰」 */
+  hasCounterRally?: boolean;
   canRemove: boolean;
   canEditOthers: boolean;
 }
@@ -35,48 +53,45 @@ function buildView(
 ): DriverView[] {
   return Object.entries(members)
     .map(([uid, member]) => {
-      // launch = target - march - rally_window
       const launchAtMs = getLaunchAtMs(targetLandingAt, member);
-      return {
-        uid,
-        member,
-        launchAtMs,
-        untilLaunchMs: launchAtMs,
-      };
+      return { uid, member, launchAtMs, untilLaunchMs: launchAtMs };
     })
     .sort((a, b) => {
-      // 自己永遠排在最上面（不會被首發 / 行軍排序蓋掉，最關鍵的「我的距發車」要一眼可見）
+      // 自己永遠最上面，再依行軍長到短
       if ((a.uid === myUid) !== (b.uid === myUid)) {
         return a.uid === myUid ? -1 : 1;
-      }
-      // Suicide 其次
-      if (a.member.isSuicide !== b.member.isSuicide) {
-        return a.member.isSuicide ? -1 : 1;
       }
       return b.member.marchSeconds - a.member.marchSeconds;
     });
 }
 
+function statusDot(status: MemberStatus) {
+  switch (status) {
+    case 'ready':
+      return 'bg-success';
+    case 'adjusting':
+      return 'bg-warning';
+    default:
+      return 'bg-muted-foreground/40';
+  }
+}
+
 /**
- * 行軍時間 cell：靜態顯示 or 可編輯（± + 直接輸入）。
- * 每一列自己管 local input state，不會互相干擾。
+ * 行軍時間 cell：靜態顯示 or ± 控制 + mono input。
  */
 function MarchCell({
   marchSeconds,
   editable,
   onSet,
-  label,
 }: {
   marchSeconds: number;
   editable: boolean;
   onSet: (seconds: number) => void;
-  label: string;
 }) {
   const { t } = useTranslation();
   const [input, setInput] = useState(formatDuration(marchSeconds));
   const focusedRef = useRef(false);
 
-  // Firebase 上的值變動時同步到 input（但不覆蓋正在編輯的欄位）
   useEffect(() => {
     if (!focusedRef.current) {
       setInput(formatDuration(marchSeconds));
@@ -84,11 +99,7 @@ function MarchCell({
   }, [marchSeconds]);
 
   if (!editable) {
-    return (
-      <td className={styles.mono} data-label={label}>
-        {formatDuration(marchSeconds)}
-      </td>
-    );
+    return <span className="mono-nums">{formatDuration(marchSeconds)}</span>;
   }
 
   const commit = () => {
@@ -102,44 +113,103 @@ function MarchCell({
   };
 
   return (
-    <td className={styles.mono} data-label={label}>
-      <div className={styles.marchEdit}>
-        <button
-          type="button"
-          className={styles.miniBtn}
-          onClick={() => onSet(marchSeconds - 1)}
-          aria-label="decrease march"
-        >
-          −
-        </button>
-        <input
-          type="text"
-          inputMode="numeric"
-          className={styles.marchInput}
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onFocus={() => {
-            focusedRef.current = true;
-          }}
-          onBlur={commit}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              (e.target as HTMLInputElement).blur();
-            }
-          }}
-          placeholder="MM:SS"
-          title={t('room.march_input_hint')}
-        />
-        <button
-          type="button"
-          className={styles.miniBtn}
-          onClick={() => onSet(marchSeconds + 1)}
-          aria-label="increase march"
-        >
-          +
-        </button>
-      </div>
-    </td>
+    <div className="inline-flex items-center gap-1">
+      <Button
+        type="button"
+        variant="outline"
+        size="icon"
+        className="size-7"
+        onClick={() => onSet(marchSeconds - 1)}
+        aria-label="decrease march"
+      >
+        <Minus />
+      </Button>
+      <input
+        type="text"
+        inputMode="numeric"
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        onFocus={() => {
+          focusedRef.current = true;
+        }}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+        }}
+        placeholder="MM:SS"
+        title={t('room.march_input_hint')}
+        className="border-input dark:bg-input/30 mono-nums text-foreground placeholder:text-muted-foreground/60 focus-visible:border-ring focus-visible:ring-ring/50 h-7 w-16 rounded-md border bg-transparent px-2 text-center text-xs shadow-xs outline-none focus-visible:ring-[3px]"
+      />
+      <Button
+        type="button"
+        variant="outline"
+        size="icon"
+        className="size-7"
+        onClick={() => onSet(marchSeconds + 1)}
+        aria-label="increase march"
+      >
+        <Plus />
+      </Button>
+    </div>
+  );
+}
+
+/**
+ * 落地偏移 cell：靜態顯示 or ± 控制。
+ */
+function OffsetCell({
+  offset,
+  editable,
+  onSet,
+}: {
+  offset: number;
+  editable: boolean;
+  onSet: (seconds: number) => void;
+}) {
+  const display = offset === 0 ? '0s' : offset > 0 ? `+${offset}s` : `${offset}s`;
+  if (!editable) {
+    return (
+      <span
+        className={cn(
+          'mono-nums',
+          offset !== 0 && 'text-warning font-medium'
+        )}
+      >
+        {display}
+      </span>
+    );
+  }
+  return (
+    <div className="inline-flex items-center gap-1">
+      <Button
+        type="button"
+        variant="outline"
+        size="icon"
+        className="size-7"
+        onClick={() => onSet(offset - 1)}
+        aria-label="decrease offset"
+      >
+        <Minus />
+      </Button>
+      <span
+        className={cn(
+          'mono-nums w-10 text-center text-xs',
+          offset !== 0 ? 'text-warning font-medium' : 'text-muted-foreground'
+        )}
+      >
+        {display}
+      </span>
+      <Button
+        type="button"
+        variant="outline"
+        size="icon"
+        className="size-7"
+        onClick={() => onSet(offset + 1)}
+        aria-label="increase offset"
+      >
+        <Plus />
+      </Button>
+    </div>
   );
 }
 
@@ -148,7 +218,6 @@ export function DriverTable({
   meta,
   myUid,
   onSetMarch,
-  onSetSuicide,
   onSetRally,
   onSetOffset,
   onSetType,
@@ -156,274 +225,450 @@ export function DriverTable({
   onRemove,
   onTransferCommander,
   onEditManual,
+  onRenameMe,
+  hasCounterRally = false,
   canRemove,
   canEditOthers,
 }: DriverTableProps) {
   const { t } = useTranslation();
   const now = useNow(1000);
+  const [tz] = useTimezone();
 
   const rows = useMemo(
     () => buildView(members, meta.targetLandingAt, myUid),
     [members, meta.targetLandingAt, myUid]
   );
 
+  if (rows.length === 0) {
+    return (
+      <div className="text-muted-foreground rounded-md border border-dashed py-12 text-center text-sm">
+        {t('room.no_drivers_yet')}
+      </div>
+    );
+  }
+
+  // 共用 helper：依角色 + 狀態算出 ⋯ menu 動作清單
+  const buildItems = (
+    uid: string,
+    member: Member,
+    isMe: boolean,
+    isCounterRally: boolean,
+    canEditThisRow: boolean
+  ): ActionItem[] => {
+    const items: ActionItem[] = [];
+    if (member.isManual) {
+      if (canEditThisRow && onEditManual) {
+        items.push({
+          label: t('room.rename_driver'),
+          icon: '✎',
+          onSelect: () => onEditManual(uid),
+        });
+      }
+      if (canEditThisRow) {
+        items.push({
+          label: isCounterRally
+            ? t('room.unset_counter_rally')
+            : t('room.set_counter_rally'),
+          icon: '⚡',
+          onSelect: () => onSetCounterRally(uid, !isCounterRally),
+        });
+      }
+      if (canRemove) {
+        items.push({
+          label: t('room.confirm_remove_short'),
+          icon: '×',
+          variant: 'danger',
+          onSelect: () => onRemove(uid),
+        });
+      }
+      return items;
+    }
+    if (isMe && onRenameMe) {
+      items.push({
+        label: t('room.rename_self'),
+        icon: '✎',
+        onSelect: onRenameMe,
+      });
+    }
+    if (canEditThisRow) {
+      items.push({
+        label: isCounterRally
+          ? t('room.unset_counter_rally')
+          : t('room.set_counter_rally'),
+        icon: '⚡',
+        onSelect: () => onSetCounterRally(uid, !isCounterRally),
+      });
+    }
+    if (isMe || canEditOthers) {
+      items.push({
+        label: t('room.demote_to_passenger'),
+        icon: '↓',
+        onSelect: () => onSetType(uid, 'passenger'),
+      });
+    }
+    if (!isMe && onTransferCommander && member.role !== 'commander') {
+      items.push({
+        label: t('room.transfer_commander_title'),
+        icon: '→',
+        onSelect: () => onTransferCommander(uid, member.name),
+      });
+    }
+    if (!isMe && canRemove) {
+      items.push({
+        label: t('room.confirm_remove_short'),
+        icon: '×',
+        variant: 'danger',
+        onSelect: () => onRemove(uid),
+      });
+    }
+    return items;
+  };
+
   return (
-    <div className={styles.tableWrap}>
-    <table className={styles.table}>
-      <thead>
-        <tr>
-          <th>{t('room.col_driver')}</th>
-          <th>{t('room.col_march')}</th>
-          <th>{t('room.col_rally')}</th>
-          <th>{t('room.col_offset')}</th>
-          <th>{t('room.col_launch')}</th>
-          <th>{t('room.col_until_launch')}</th>
-          <th>{t('room.col_status')}</th>
-        </tr>
-      </thead>
-      <tbody>
-        {rows.map(({ uid, member, launchAtMs }) => {
-          const isMe = uid === myUid;
-          const canEditThisMarch = !meta.locked && (isMe || canEditOthers);
-          const untilLaunchMs = launchAtMs != null ? launchAtMs - now : null;
-          const untilLaunchSec =
-            untilLaunchMs != null ? Math.max(0, Math.floor(untilLaunchMs / 1000)) : null;
+    <>
+      {/* === 桌機：shadcn Table === */}
+      <div className="hidden md:block rounded-md border">
+        <Table>
+          <TableHeader className="bg-muted/50 [&_tr]:border-b">
+            <TableRow>
+              <TableHead className="font-medium">{t('room.col_driver')}</TableHead>
+              <TableHead className="font-medium">{t('room.col_march')}</TableHead>
+              <TableHead className="font-medium">{t('room.col_rally')}</TableHead>
+              <TableHead className="font-medium">{t('room.col_offset')}</TableHead>
+              <TableHead className="font-medium">{t('room.col_launch')}</TableHead>
+              <TableHead className="font-medium">
+                {t('room.col_until_launch')}
+              </TableHead>
+              <TableHead className="font-medium">{t('room.col_status')}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {rows.map(({ uid, member, launchAtMs }) => {
+              const isMe = uid === myUid;
+              const canEditThisRow = !meta.locked && (isMe || canEditOthers);
+              const canEditThisMarch = canEditThisRow;
+              const isCounterRally = member.counterRally === true;
 
-          const untilLaunchClass =
-            untilLaunchMs == null
-              ? ''
-              : untilLaunchMs <= 0
-                ? styles.launched
-                : untilLaunchSec! < 30
-                  ? styles.danger
-                  : untilLaunchSec! < 60
-                    ? styles.warning
-                    : '';
+              const untilLaunchMs = launchAtMs != null ? launchAtMs - now : null;
+              const untilLaunchSec =
+                untilLaunchMs != null
+                  ? Math.max(0, Math.floor(untilLaunchMs / 1000))
+                  : null;
 
-          const isCounterRally = member.counterRally === true;
-          const canEditThisRow = !meta.locked && (isMe || canEditOthers);
-          return (
-            <tr
-              key={uid}
-              className={`${isMe ? styles.self : ''} ${
-                isCounterRally ? styles.counterRally : ''
-              }`}
-            >
-              <td data-label={t('room.col_driver')}>
-                <div className={styles.driverInfo}>
-                  <span className={styles.name} title={member.name}>
-                    {member.name}
-                  </span>
-                  {member.role === 'commander' && (
-                    <span className={styles.chip}>{t('room.commander')}</span>
-                  )}
-                {/* SUICIDE：可編輯時顯示 toggle button、不可編輯但已是首發車時顯示靜態 chip */}
-                {canEditThisRow ? (
-                  <button
-                    type="button"
-                    className={`${styles.suicideBtn} ${
-                      member.isSuicide ? styles.suicideBtnOn : ''
-                    }`}
-                    onClick={() => onSetSuicide(uid, !member.isSuicide)}
-                    title={
-                      member.isSuicide
-                        ? t('room.unset_suicide')
-                        : t('room.set_suicide')
-                    }
-                  >
-                    {member.isSuicide ? '★ ' : '+ '}
-                    {t('room.role_suicide')}
-                  </button>
-                ) : (
-                  member.isSuicide && (
-                    <span className={styles.suicide}>
-                      {t('room.role_suicide')}
+              const untilLaunchClass =
+                untilLaunchMs == null
+                  ? 'text-muted-foreground'
+                  : untilLaunchMs <= 0
+                    ? 'text-success'
+                    : untilLaunchSec! < 30
+                      ? 'text-destructive animate-pulse font-semibold'
+                      : untilLaunchSec! < 60
+                        ? 'text-warning font-medium'
+                        : 'text-foreground';
+
+              // 反集結模式：非反集結 row 降透明度 → 視覺上提示「不參與當下作戰」
+              const isPassive = hasCounterRally && !isCounterRally;
+              const rowHighlight = isCounterRally
+                ? 'bg-warning/10 border-l-4 border-l-warning'
+                : isMe
+                  ? 'bg-primary/5 border-l-4 border-l-primary'
+                  : '';
+
+              const items = buildItems(uid, member, isMe, isCounterRally, canEditThisRow);
+
+            return (
+              <TableRow key={uid} className={cn(rowHighlight, isPassive && 'opacity-50')}>
+                {/* 車頭名稱 + chips */}
+                <TableCell>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span
+                      className="text-foreground max-w-[140px] truncate font-medium"
+                      title={member.name}
+                    >
+                      {member.name}
                     </span>
-                  )
-                )}
-                  {/* 反集結：純標記顯示（在 ⋯ menu 裡切換） */}
-                  {isCounterRally && (
-                    <span className={styles.counterRallyTag}>
-                      ⚡ {t('room.counter_rally')}
-                    </span>
-                  )}
-                </div>
-              </td>
-
-              <MarchCell
-                marchSeconds={member.marchSeconds}
-                editable={canEditThisMarch}
-                onSet={(s) => onSetMarch(uid, s)}
-                label={t('room.col_march')}
-              />
-
-              <td className={styles.mono} data-label={t('room.col_rally')}>
-                {canEditThisMarch ? (
-                  <div className={styles.rallyToggle}>
-                    {[300, 600].map((sec) => {
-                      const cur = member.rallyWindowSeconds ?? 300;
-                      return (
-                        <button
-                          key={sec}
-                          type="button"
-                          className={`${styles.rallyBtn} ${cur === sec ? styles.rallyBtnOn : ''}`}
-                          onClick={() => onSetRally(uid, sec)}
-                        >
-                          {sec / 60}m
-                        </button>
-                      );
-                    })}
+                    {member.role === 'commander' && (
+                      <Badge variant="secondary">{t('room.commander')}</Badge>
+                    )}
+                    {/* 反集結 tag（純標記、toggle 在 ⋯ menu） */}
+                    {isCounterRally && (
+                      <Badge
+                        variant="outline"
+                        className="border-warning text-warning"
+                      >
+                        <Zap />
+                        {t('room.counter_rally')}
+                      </Badge>
+                    )}
                   </div>
-                ) : (
-                  `${(member.rallyWindowSeconds ?? 300) / 60}m`
-                )}
-              </td>
+                </TableCell>
 
-              <td className={styles.mono} data-label={t('room.col_offset')}>
-                {(() => {
-                  const offset = member.landingOffsetSeconds ?? 0;
-                  const display = offset === 0 ? '0s' : offset > 0 ? `+${offset}s` : `${offset}s`;
-                  if (!canEditThisMarch) {
-                    return <span className={offset !== 0 ? styles.offsetActive : ''}>{display}</span>;
-                  }
-                  return (
-                    <div className={styles.offsetCtrl}>
-                      <button
-                        type="button"
-                        className={styles.miniBtn}
-                        onClick={() => onSetOffset(uid, offset - 1)}
-                      >
-                        −
-                      </button>
-                      <span className={offset !== 0 ? styles.offsetActive : styles.offsetVal}>
-                        {display}
+                {/* 行軍 */}
+                <TableCell>
+                  <MarchCell
+                    marchSeconds={member.marchSeconds}
+                    editable={canEditThisMarch}
+                    onSet={(s) => onSetMarch(uid, s)}
+                  />
+                </TableCell>
+
+                {/* 集結 5m / 10m */}
+                <TableCell>
+                  {canEditThisMarch ? (
+                    <ToggleGroup
+                      type="single"
+                      variant="outline"
+                      size="sm"
+                      value={String(member.rallyWindowSeconds ?? 300)}
+                      onValueChange={(v) => v && onSetRally(uid, Number(v))}
+                    >
+                      <ToggleGroupItem value="300" className="h-7 px-2 text-xs">
+                        5m
+                      </ToggleGroupItem>
+                      <ToggleGroupItem value="600" className="h-7 px-2 text-xs">
+                        10m
+                      </ToggleGroupItem>
+                    </ToggleGroup>
+                  ) : (
+                    <span className="mono-nums">
+                      {(member.rallyWindowSeconds ?? 300) / 60}m
+                    </span>
+                  )}
+                </TableCell>
+
+                {/* 偏移 */}
+                <TableCell>
+                  <OffsetCell
+                    offset={member.landingOffsetSeconds ?? 0}
+                    editable={canEditThisMarch}
+                    onSet={(s) => onSetOffset(uid, s)}
+                  />
+                </TableCell>
+
+                {/* 發車 UTC */}
+                <TableCell className="mono-nums text-foreground">
+                  {launchAtMs ? formatTimeInTz(launchAtMs, tz) : '--:--:--'}
+                </TableCell>
+
+                {/* 距發車（自己列加大） */}
+                <TableCell>
+                  <span
+                    className={cn(
+                      'mono-nums',
+                      isMe ? 'text-2xl font-bold tracking-tight' : 'text-base',
+                      untilLaunchClass
+                    )}
+                  >
+                    {untilLaunchSec == null
+                      ? '--:--'
+                      : untilLaunchMs! <= 0
+                        ? 'LAUNCHED'
+                        : formatDuration(untilLaunchSec)}
+                  </span>
+                </TableCell>
+
+                {/* 狀態 + ⋯ 動作（⋯ 固定靠右、不受 status 寬度影響） */}
+                <TableCell>
+                  <div className="flex items-center justify-between gap-2">
+                    {member.isManual ? (
+                      <Badge variant="outline" className="border-dashed">
+                        {t('room.manual_label')}
+                      </Badge>
+                    ) : (
+                      <span className="text-muted-foreground inline-flex items-center gap-1.5 text-xs">
+                        <span
+                          className={cn(
+                            'size-1.5 rounded-full',
+                            statusDot(member.status)
+                          )}
+                        />
+                        {t(`room.status_${member.status}`)}
                       </span>
-                      <button
-                        type="button"
-                        className={styles.miniBtn}
-                        onClick={() => onSetOffset(uid, offset + 1)}
-                      >
-                        +
-                      </button>
-                    </div>
-                  );
-                })()}
-              </td>
+                    )}
+                    {items.length > 0 ? (
+                      <RowActionsMenu items={items} />
+                    ) : (
+                      // 佔位讓 ⋯ 對齊（沒有動作可選的 row 也保持同寬）
+                      <span className="size-8" aria-hidden />
+                    )}
+                  </div>
+                </TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+    </div>
 
-              <td
-                className={`${styles.mono} ${styles.launch}`}
-                data-label={t('room.col_launch')}
-              >
-                {launchAtMs ? formatUtcTime(launchAtMs) : '--:--:--'}
-              </td>
+    {/* === 手機：Card 列表 === */}
+    <div className="md:hidden flex flex-col gap-3">
+      {rows.map(({ uid, member, launchAtMs }) => {
+        const isMe = uid === myUid;
+        const canEditThisRow = !meta.locked && (isMe || canEditOthers);
+        const canEditThisMarch = canEditThisRow;
+        const isCounterRally = member.counterRally === true;
 
-              <td
-                className={`${styles.mono} ${styles.untilCell} ${isMe ? styles.untilSelf : ''} ${untilLaunchClass}`}
-                data-label={t('room.col_until_launch')}
+        const untilLaunchMs = launchAtMs != null ? launchAtMs - now : null;
+        const untilLaunchSec =
+          untilLaunchMs != null
+            ? Math.max(0, Math.floor(untilLaunchMs / 1000))
+            : null;
+
+        const untilLaunchClass =
+          untilLaunchMs == null
+            ? 'text-muted-foreground'
+            : untilLaunchMs <= 0
+              ? 'text-success'
+              : untilLaunchSec! < 30
+                ? 'text-destructive animate-pulse font-semibold'
+                : untilLaunchSec! < 60
+                  ? 'text-warning font-medium'
+                  : 'text-foreground';
+
+        // self / counter-rally card 高亮：用 ring 不跟 card 既有 border 打架
+        // ring 在 border 外側畫一圈、bg tint 提到 10%、dark / light 都明顯
+        const cardHighlight = isCounterRally
+          ? 'ring-2 ring-warning bg-warning/10'
+          : isMe
+            ? 'ring-2 ring-primary bg-primary/10'
+            : '';
+        // 反集結模式中、自己沒被標反集結 → 不參戰、降透明度
+        const isPassive = hasCounterRally && !isCounterRally;
+
+        const items = buildItems(uid, member, isMe, isCounterRally, canEditThisRow);
+
+        return (
+          <div
+            key={uid}
+            className={cn(
+              'bg-card text-card-foreground flex flex-col gap-3 rounded-lg border p-4',
+              cardHighlight,
+              isPassive && 'opacity-50'
+            )}
+          >
+            {/* 上方：名字 + chips + ⋯ */}
+            <div className="flex items-start gap-2">
+              <div className="flex flex-1 flex-wrap items-center gap-1.5 min-w-0">
+                <span
+                  className="text-foreground truncate font-semibold"
+                  title={member.name}
+                >
+                  {member.name}
+                </span>
+                {member.role === 'commander' && (
+                  <Badge variant="secondary">{t('room.commander')}</Badge>
+                )}
+                {isCounterRally && (
+                  <Badge
+                    variant="outline"
+                    className="border-warning text-warning"
+                  >
+                    <Zap />
+                    {t('room.counter_rally')}
+                  </Badge>
+                )}
+              </div>
+              {items.length > 0 && <RowActionsMenu items={items} />}
+            </div>
+
+            {/* 中間：距發車。自己 row 大字、其他人縮小 */}
+            <div
+              className={cn(
+                'flex flex-col items-center gap-1',
+                isMe ? 'py-2' : 'py-1'
+              )}
+            >
+              <span
+                className={cn(
+                  'mono-nums font-bold tracking-tight',
+                  isMe ? 'text-3xl' : 'text-lg',
+                  untilLaunchClass
+                )}
               >
                 {untilLaunchSec == null
                   ? '--:--'
                   : untilLaunchMs! <= 0
                     ? 'LAUNCHED'
                     : formatDuration(untilLaunchSec)}
-              </td>
+              </span>
+              <span className="text-muted-foreground text-[10px] tracking-widest uppercase">
+                {t('room.col_until_launch')} ·{' '}
+                {launchAtMs ? formatTimeInTz(launchAtMs, tz) : '--:--:--'}
+              </span>
+            </div>
 
-              <td data-label={t('room.col_status')}>
-                <div className={styles.statusRow}>
-                  {member.isManual ? (
-                    // 代管車頭：顯示靜態 PROXY tag、不顯示 online/offline dot
-                    <span className={styles.manualTag}>
-                      {t('room.manual_label')}
-                    </span>
-                  ) : (
-                    <span className={`${styles.status} ${styles[member.status]}`}>
-                      <span className={styles.dot} />
-                      {t(`room.status_${member.status}`)}
-                    </span>
-                  )}
-                  {(() => {
-                    const items: ActionItem[] = [];
-
-                    // 代管車頭：commander 專屬的編輯 / 刪除動作（其他選項都不適用）
-                    if (member.isManual) {
-                      // 重命名 / 改行軍 → 因為會動 march time、鎖定後就禁
-                      if (canEditThisRow && onEditManual) {
-                        items.push({
-                          label: t('room.rename_driver'),
-                          icon: '✎',
-                          onSelect: () => onEditManual(uid),
-                        });
-                      }
-                      if (canEditThisRow) {
-                        items.push({
-                          label: isCounterRally
-                            ? t('room.unset_counter_rally')
-                            : t('room.set_counter_rally'),
-                          icon: '⚡',
-                          onSelect: () => onSetCounterRally(uid, !isCounterRally),
-                        });
-                      }
-                      if (canRemove) {
-                        items.push({
-                          label: t('room.confirm_remove_short'),
-                          icon: '×',
-                          variant: 'danger',
-                          onSelect: () => onRemove(uid),
-                        });
-                      }
-                      return items.length > 0 ? <RowActionsMenu items={items} /> : null;
-                    }
-
-                    // 真人車頭：原本邏輯
-                    // 自己 / commander 都可以切換 反集結 標記
-                    if (canEditThisRow) {
-                      items.push({
-                        label: isCounterRally
-                          ? t('room.unset_counter_rally')
-                          : t('room.set_counter_rally'),
-                        icon: '⚡',
-                        onSelect: () => onSetCounterRally(uid, !isCounterRally),
-                      });
-                    }
-                    // 自己 / commander 都可以把這位車頭降為車身
-                    if (isMe || canEditOthers) {
-                      items.push({
-                        label: t('room.demote_to_passenger'),
-                        icon: '↓',
-                        onSelect: () => onSetType(uid, 'passenger'),
-                      });
-                    }
-                    if (!isMe && onTransferCommander && member.role !== 'commander') {
-                      items.push({
-                        label: t('room.transfer_commander_title'),
-                        icon: '→',
-                        onSelect: () => onTransferCommander(uid, member.name),
-                      });
-                    }
-                    if (!isMe && canRemove) {
-                      items.push({
-                        label: t('room.confirm_remove_short'),
-                        icon: '×',
-                        variant: 'danger',
-                        onSelect: () => onRemove(uid),
-                      });
-                    }
-                    return items.length > 0 ? <RowActionsMenu items={items} /> : null;
-                  })()}
-                </div>
-              </td>
-            </tr>
-          );
-        })}
-        {rows.length === 0 && (
-          <tr>
-            <td colSpan={7} className={styles.empty}>
-              {t('room.no_drivers_yet')}
-            </td>
-          </tr>
-        )}
-      </tbody>
-    </table>
+            {/* 下方：行軍 / 集結 / 偏移 / 狀態 */}
+            <div className="flex flex-col gap-2 border-t pt-3">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-muted-foreground text-xs">
+                  {t('room.col_march')}
+                </span>
+                <MarchCell
+                  marchSeconds={member.marchSeconds}
+                  editable={canEditThisMarch}
+                  onSet={(s) => onSetMarch(uid, s)}
+                />
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-muted-foreground text-xs">
+                  {t('room.col_rally')}
+                </span>
+                {canEditThisMarch ? (
+                  <ToggleGroup
+                    type="single"
+                    variant="outline"
+                    size="sm"
+                    value={String(member.rallyWindowSeconds ?? 300)}
+                    onValueChange={(v) => v && onSetRally(uid, Number(v))}
+                  >
+                    <ToggleGroupItem value="300" className="h-7 px-3 text-xs">
+                      5m
+                    </ToggleGroupItem>
+                    <ToggleGroupItem value="600" className="h-7 px-3 text-xs">
+                      10m
+                    </ToggleGroupItem>
+                  </ToggleGroup>
+                ) : (
+                  <span className="mono-nums">
+                    {(member.rallyWindowSeconds ?? 300) / 60}m
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-muted-foreground text-xs">
+                  {t('room.col_offset')}
+                </span>
+                <OffsetCell
+                  offset={member.landingOffsetSeconds ?? 0}
+                  editable={canEditThisMarch}
+                  onSet={(s) => onSetOffset(uid, s)}
+                />
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-muted-foreground text-xs">
+                  {t('room.col_status')}
+                </span>
+                {member.isManual ? (
+                  <Badge variant="outline" className="border-dashed">
+                    {t('room.manual_label')}
+                  </Badge>
+                ) : (
+                  <span className="text-muted-foreground inline-flex items-center gap-1.5 text-xs">
+                    <span
+                      className={cn(
+                        'size-1.5 rounded-full',
+                        statusDot(member.status)
+                      )}
+                    />
+                    {t(`room.status_${member.status}`)}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })}
     </div>
+    </>
   );
 }

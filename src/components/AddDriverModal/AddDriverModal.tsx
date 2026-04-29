@@ -1,23 +1,36 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Minus, Plus } from 'lucide-react';
 
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  Field,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+} from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
 import { formatDuration, parseMarchInput } from '@/lib/time';
-
-import styles from './AddDriverModal.module.scss';
 
 interface AddDriverModalProps {
   open: boolean;
-  /** 編輯模式時帶入初始值（重命名 / 修改行軍時間共用同一個 modal） */
   initialName?: string;
   initialMarchSeconds?: number;
-  /** modal 模式：'add' 顯示「新增車頭」，'edit' 顯示「編輯車頭」 */
   mode?: 'add' | 'edit';
   onClose: () => void;
   onSubmit: (name: string, marchSeconds: number) => Promise<void> | void;
 }
 
 /**
- * 指揮官代為新增 / 編輯 manual 車頭的 HUD 風 modal。
+ * 指揮官代為新增 / 編輯 manual 車頭的 modal。
  * 表單只收名字 + 行軍時間，其他欄位留給 row 內 inline 編輯。
  */
 export function AddDriverModal({
@@ -37,7 +50,6 @@ export function AddDriverModal({
   const [submitting, setSubmitting] = useState(false);
   const nameRef = useRef<HTMLInputElement>(null);
 
-  // ± 按鈕：以當前 input 解析出秒數、調整、再格式化回去；解析失敗就保持原樣
   const adjustMarch = (delta: number) => {
     const cur = parseMarchInput(marchInput);
     const base = cur != null ? cur : 0;
@@ -45,7 +57,6 @@ export function AddDriverModal({
     setMarchInput(formatDuration(next));
   };
 
-  // 每次開啟時 reset 表單到初始值
   useEffect(() => {
     if (!open) return;
     setName(initialName);
@@ -54,22 +65,7 @@ export function AddDriverModal({
     );
     setError(null);
     setSubmitting(false);
-    // 自動聚焦名字欄位
-    const id = window.setTimeout(() => nameRef.current?.focus(), 50);
-    return () => window.clearTimeout(id);
   }, [open, initialName, initialMarchSeconds]);
-
-  // Esc 關閉
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && !submitting) onClose();
-    };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [open, submitting, onClose]);
-
-  if (!open) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,98 +98,103 @@ export function AddDriverModal({
   };
 
   return (
-    <div className={styles.backdrop} onMouseDown={onClose}>
-      <div
-        className={styles.dialog}
-        onMouseDown={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        if (!o && !submitting) onClose();
+      }}
+    >
+      <DialogContent
+        onPointerDownOutside={(e) => {
+          if (submitting) e.preventDefault();
+        }}
+        onEscapeKeyDown={(e) => {
+          if (submitting) e.preventDefault();
+        }}
+        onOpenAutoFocus={(e) => {
+          e.preventDefault();
+          window.setTimeout(() => nameRef.current?.focus(), 30);
+        }}
       >
-        <span className={styles.cornerTL} />
-        <span className={styles.cornerTR} />
-        <span className={styles.cornerBL} />
-        <span className={styles.cornerBR} />
+        <DialogHeader>
+          <DialogTitle>
+            {mode === 'edit' ? t('room.edit_driver') : t('room.add_driver')}
+          </DialogTitle>
+          <DialogDescription>{t('room.add_driver_hint')}</DialogDescription>
+        </DialogHeader>
 
-        <div className={styles.title}>
-          {mode === 'edit' ? t('room.edit_driver') : t('room.add_driver')}
-        </div>
-        <div className={styles.hint}>{t('room.add_driver_hint')}</div>
-
-        <form onSubmit={handleSubmit}>
-          <div className={styles.field}>
-            <label className={styles.label} htmlFor="manual-name">
-              {t('room.col_driver')}
-            </label>
-            <input
-              id="manual-name"
-              ref={nameRef}
-              type="text"
-              className={styles.input}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              maxLength={20}
-              placeholder={t('entry.name_placeholder')}
-              autoComplete="off"
-            />
-          </div>
-
-          <div className={styles.field}>
-            <label className={styles.label} htmlFor="manual-march">
-              {t('room.col_march')}
-            </label>
-            {/* 對齊 row 內 inline 行軍輸入：± / 中央 mono 輸入 / ± */}
-            <div className={styles.marchEdit}>
-              <button
-                type="button"
-                className={styles.miniBtn}
-                onClick={() => adjustMarch(-1)}
-                aria-label="decrease"
-              >
-                −
-              </button>
-              <input
-                id="manual-march"
-                type="text"
-                inputMode="numeric"
-                className={styles.marchInput}
-                value={marchInput}
-                onChange={(e) => setMarchInput(e.target.value)}
-                placeholder="MM:SS"
-                title={t('room.march_input_hint')}
+        <form onSubmit={handleSubmit} id="manual-driver-form">
+          <FieldGroup>
+            <Field>
+              <FieldLabel htmlFor="manual-name">{t('room.col_driver')}</FieldLabel>
+              <Input
+                id="manual-name"
+                ref={nameRef}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                maxLength={20}
+                placeholder={t('entry.name_placeholder')}
                 autoComplete="off"
               />
-              <button
-                type="button"
-                className={styles.miniBtn}
-                onClick={() => adjustMarch(1)}
-                aria-label="increase"
-              >
-                +
-              </button>
-            </div>
-          </div>
+            </Field>
 
-          <div className={styles.error}>{error ?? ' '}</div>
+            <Field>
+              <FieldLabel htmlFor="manual-march">{t('room.col_march')}</FieldLabel>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => adjustMarch(-1)}
+                  aria-label="decrease"
+                >
+                  <Minus />
+                </Button>
+                <Input
+                  id="manual-march"
+                  type="text"
+                  inputMode="numeric"
+                  value={marchInput}
+                  onChange={(e) => setMarchInput(e.target.value)}
+                  placeholder="MM:SS"
+                  className="mono-nums max-w-32 text-center"
+                  autoComplete="off"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => adjustMarch(1)}
+                  aria-label="increase"
+                >
+                  <Plus />
+                </Button>
+              </div>
+              <FieldDescription>{t('room.march_input_hint')}</FieldDescription>
+            </Field>
 
-          <div className={styles.buttons}>
-            <button
-              type="button"
-              className={styles.cancelBtn}
-              onClick={onClose}
-              disabled={submitting}
-            >
-              {t('common.cancel')}
-            </button>
-            <button
-              type="submit"
-              className={styles.submitBtn}
-              disabled={submitting}
-            >
-              {mode === 'edit' ? t('common.confirm') : t('room.add')}
-            </button>
-          </div>
+            {error && (
+              <p className="text-destructive text-sm break-words" role="alert">
+                {error}
+              </p>
+            )}
+          </FieldGroup>
         </form>
-      </div>
-    </div>
+
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
+            disabled={submitting}
+          >
+            {t('common.cancel')}
+          </Button>
+          <Button type="submit" form="manual-driver-form" disabled={submitting}>
+            {mode === 'edit' ? t('common.confirm') : t('room.add')}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -84,11 +84,11 @@ export function vibrate(pattern: number | number[]): void {
 }
 
 /**
- * 發車倒數提示音。
+ * 倒數提示音（發車 / 抵達共用）。
  * - secondsOut > 0：短促高音 (880 Hz, 120ms)
- * - secondsOut === 0：發車！較低音 (440 Hz, 400ms) + 震動
+ * - secondsOut === 0：到點！較低音 (440 Hz, 400ms) + 震動
  */
-export function launchAlert(secondsOut: number): void {
+export function countdownBeep(secondsOut: number): void {
   if (secondsOut === 0) {
     beep(440, 0.4, 0.55);
     vibrate([200, 80, 200]);

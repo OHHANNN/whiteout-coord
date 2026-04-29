@@ -19,7 +19,6 @@ import type {
   MemberStatus,
   ParticipantType,
   RoomMeta,
-  WavePreset,
 } from '@/types/room';
 
 interface UseRoomState {
@@ -43,16 +42,6 @@ interface UseRoomActions {
 
   /** 指揮官代為新增「代管車頭」（玩家不會操作系統時使用）。回傳新建 uid。 */
   addManualMember: (name: string, marchSeconds: number) => Promise<string>;
-
-  // === 波次預設管理 ===
-  /** 把當前 target* 欄位存成新的 wave preset（自動命名 Wave N） */
-  saveCurrentWave: (name?: string) => Promise<void>;
-  /** 把指定 preset 載入當前 target*（所有人即時同步） */
-  loadWave: (presetId: string) => Promise<void>;
-  /** 刪除指定 preset */
-  deleteWave: (presetId: string) => Promise<void>;
-  /** 重新命名 preset */
-  renameWave: (presetId: string, name: string) => Promise<void>;
 
   // === 戰報 ===
   /** 鎖定 + 將當下狀態 snapshot 為一份戰報（atomic） */
@@ -139,9 +128,27 @@ export function useRoom(
 
     (async () => {
       try {
+        // 先把 onDisconnect 註冊好、再寫資料。
+        // 順序很重要：如果先 set 才註冊 onDisconnect、那一瞬間 tab 關掉
+        // 寫進去的 member 會永遠卡 ready / online。
+        // 即使 set() 後 cancelled，network call 已經飛出去無法收回。
+        const myRef = ref(database, `rooms/${pin}/members/${uid}`);
+        await onDisconnect(myRef).update({
+          status: 'offline' satisfies MemberStatus,
+          lastSeen: serverTimestamp(),
+        });
+        if (cancelled) {
+          // 中斷：取消剛剛註冊的 onDisconnect
+          onDisconnect(myRef).cancel().catch(() => undefined);
+          return;
+        }
+
         const metaRef = ref(database, `rooms/${pin}/meta`);
         const metaSnap = await get(metaRef);
-        if (cancelled) return;
+        if (cancelled) {
+          onDisconnect(myRef).cancel().catch(() => undefined);
+          return;
+        }
 
         // 房間不存在 → 建立（自己成為 commander）
         if (!metaSnap.exists()) {
@@ -159,7 +166,6 @@ export function useRoom(
           const member: Member = {
             name,
             role: 'commander',
-            isSuicide: false,
             marchSeconds: 60,
             status: 'ready',
             lastSeen: now,
@@ -177,9 +183,11 @@ export function useRoom(
           logInfo('useRoom · created', pin);
         } else {
           // 房間存在 → 以 driver 加入（或更新自己 name）
-          const myRef = ref(database, `rooms/${pin}/members/${uid}`);
           const mySnap = await get(myRef);
-          if (cancelled) return;
+          if (cancelled) {
+            onDisconnect(myRef).cancel().catch(() => undefined);
+            return;
+          }
           const existingMember = mySnap.val() as Member | null;
 
           const now = Date.now();
@@ -189,7 +197,6 @@ export function useRoom(
               (metaSnap.val() as RoomMeta).commanderId === uid
                 ? 'commander'
                 : (existingMember?.role ?? 'driver'),
-            isSuicide: existingMember?.isSuicide ?? false,
             marchSeconds: existingMember?.marchSeconds ?? 60,
             status: 'ready',
             lastSeen: now,
@@ -206,13 +213,7 @@ export function useRoom(
 
         joinedRef.current = true;
 
-        // presence：斷線時自動標 offline
-        const myRef = ref(database, `rooms/${pin}/members/${uid}`);
-        onDisconnect(myRef).update({
-          status: 'offline' satisfies MemberStatus,
-          lastSeen: serverTimestamp(),
-        });
-
+        // onDisconnect 已在 effect 開頭註冊好了
         // lastActivityAt 用 serverTimestamp
         await update(ref(database, `rooms/${pin}/meta`), {
           lastActivityAt: serverTimestamp(),
@@ -382,7 +383,6 @@ export function useRoom(
     const member: Member = {
       name: trimmed,
       role: 'driver',
-      isSuicide: false,
       marchSeconds: safeMarch,
       status: 'manual',
       lastSeen: Date.now(),
@@ -403,93 +403,6 @@ export function useRoom(
     }
   };
 
-  // === Wave preset actions ===
-
-  const saveCurrentWave = async (name?: string) => {
-    if (!pin || !state.meta) return;
-    const presetId = `w${Date.now()}`;
-    const order = state.meta.wavePresetOrder ?? [];
-    const presets = state.meta.wavePresets;
-
-    // 找已存在 "Wave N" 名稱裡最大的 N、新 wave = N+1
-    // 避免刪掉中間或末端後新增的撞號
-    const usedNumbers = presets
-      ? Object.values(presets).map((p) => {
-          const match = /^Wave\s+(\d+)$/i.exec(p.name ?? '');
-          return match ? Number(match[1]) : 0;
-        })
-      : [];
-    const nextNumber = Math.max(0, ...usedNumbers) + 1;
-
-    // Firebase 不吃 undefined，全部 ?? null 處理
-    const newPreset: WavePreset = {
-      id: presetId,
-      name: name?.trim() || `Wave ${nextNumber}`,
-      targetLandingAt: state.meta.targetLandingAt ?? null,
-      targetLabel: state.meta.targetLabel ?? null,
-      targetX: state.meta.targetX ?? null,
-      targetY: state.meta.targetY ?? null,
-    };
-    try {
-      await update(ref(database), {
-        [`rooms/${pin}/meta/wavePresets/${presetId}`]: newPreset,
-        [`rooms/${pin}/meta/wavePresetOrder`]: [...order, presetId],
-        [`rooms/${pin}/meta/lastActivityAt`]: serverTimestamp(),
-      });
-    } catch (err) {
-      logError('useRoom · saveCurrentWave rejected', err);
-      throw err;
-    }
-  };
-
-  const loadWave = async (presetId: string) => {
-    if (!pin || !state.meta) return;
-    const preset = state.meta.wavePresets?.[presetId];
-    if (!preset) return;
-    try {
-      await update(ref(database, `rooms/${pin}/meta`), {
-        targetLandingAt: preset.targetLandingAt ?? null,
-        targetLabel: preset.targetLabel ?? null,
-        targetX: preset.targetX ?? null,
-        targetY: preset.targetY ?? null,
-        // 切換波次後解除鎖定，準備新一波
-        locked: false,
-        lastActivityAt: serverTimestamp(),
-      });
-    } catch (err) {
-      logError('useRoom · loadWave rejected', err);
-      throw err;
-    }
-  };
-
-  const deleteWave = async (presetId: string) => {
-    if (!pin || !state.meta) return;
-    const order = state.meta.wavePresetOrder ?? [];
-    try {
-      await update(ref(database), {
-        [`rooms/${pin}/meta/wavePresets/${presetId}`]: null,
-        [`rooms/${pin}/meta/wavePresetOrder`]: order.filter((id) => id !== presetId),
-        [`rooms/${pin}/meta/lastActivityAt`]: serverTimestamp(),
-      });
-    } catch (err) {
-      logError('useRoom · deleteWave rejected', err);
-      throw err;
-    }
-  };
-
-  const renameWave = async (presetId: string, name: string) => {
-    if (!pin) return;
-    try {
-      await update(
-        ref(database, `rooms/${pin}/meta/wavePresets/${presetId}`),
-        { name: name.slice(0, 40) }
-      );
-    } catch (err) {
-      logError('useRoom · renameWave rejected', err);
-      throw err;
-    }
-  };
-
   // === Battle snapshot ===
 
   const startBattle = async () => {
@@ -497,20 +410,8 @@ export function useRoom(
     const battleId = `b${Date.now()}`;
     const lockedAt = Date.now();
 
-    // 找出當前 target 對應的 wave preset 名稱（沒有就 null）
-    let waveName: string | null = null;
-    if (state.meta.wavePresets && state.meta.targetLandingAt != null) {
-      for (const id of Object.keys(state.meta.wavePresets)) {
-        const p = state.meta.wavePresets[id];
-        if (
-          p.targetLandingAt === state.meta.targetLandingAt &&
-          (p.targetLabel ?? null) === (state.meta.targetLabel ?? null)
-        ) {
-          waveName = p.name ?? null;
-          break;
-        }
-      }
-    }
+    // wave 系統已移除，戰報 waveName 永遠為 null
+    const waveName: string | null = null;
 
     // Snapshot 所有出集結車頭
     const targetAt = state.meta.targetLandingAt;
@@ -529,7 +430,6 @@ export function useRoom(
           rallyWindowSeconds: rally,
           plannedLaunchAt: launch,
           arrivalAtMs: arrival,
-          isSuicide: m.isSuicide,
           status: m.status,
         };
       });
@@ -584,10 +484,6 @@ export function useRoom(
     removeMember,
     leaveRoom,
     addManualMember,
-    saveCurrentWave,
-    loadWave,
-    deleteWave,
-    renameWave,
     startBattle,
     deleteBattle,
   };
