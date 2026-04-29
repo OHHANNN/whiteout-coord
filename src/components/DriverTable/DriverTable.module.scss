@@ -335,6 +335,19 @@
   font-size: 11px;
 }
 
+// 代管車頭的 status：純標籤、無 dot 燈、用淡灰色避開「真人在線」誤導
+.manualTag {
+  display: inline-block;
+  padding: 2px 8px;
+  font-family: $font-mono;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  border: 1px dashed $hud-cyan-line;
+  color: $text-dim;
+  background: rgba(0, 255, 255, 0.04);
+  white-space: nowrap;
+}
+
 .dot {
   width: 6px;
   height: 6px;

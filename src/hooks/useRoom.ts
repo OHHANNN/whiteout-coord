@@ -41,6 +41,9 @@ interface UseRoomActions {
   removeMember: (uid: string) => Promise<void>;
   leaveRoom: () => Promise<void>;
 
+  /** 指揮官代為新增「代管車頭」（玩家不會操作系統時使用）。回傳新建 uid。 */
+  addManualMember: (name: string, marchSeconds: number) => Promise<string>;
+
   // === 波次預設管理 ===
   /** 把當前 target* 欄位存成新的 wave preset（自動命名 Wave N） */
   saveCurrentWave: (name?: string) => Promise<void>;
@@ -370,6 +373,36 @@ export function useRoom(
     }
   };
 
+  const addManualMember = async (name: string, marchSeconds: number) => {
+    if (!pin) throw new Error('no pin');
+    const trimmed = name.trim().slice(0, 20);
+    const safeMarch = Math.max(0, Math.min(600, Math.floor(marchSeconds)));
+    // Firebase key 不能含 . $ # [ ] /，用 base36 + 隨機 suffix 確保唯一
+    const newUid = `manual_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+    const member: Member = {
+      name: trimmed,
+      role: 'driver',
+      isSuicide: false,
+      marchSeconds: safeMarch,
+      status: 'manual',
+      lastSeen: Date.now(),
+      rallying: true,
+      rallyWindowSeconds: 300,
+      landingOffsetSeconds: 0,
+      participantType: 'driver',
+      counterRally: false,
+      isManual: true,
+    };
+    try {
+      await set(ref(database, `rooms/${pin}/members/${newUid}`), member);
+      logInfo('useRoom · addManualMember', { newUid, name: trimmed });
+      return newUid;
+    } catch (err) {
+      logError('useRoom · addManualMember rejected', err);
+      throw err;
+    }
+  };
+
   // === Wave preset actions ===
 
   const saveCurrentWave = async (name?: string) => {
@@ -550,6 +583,7 @@ export function useRoom(
     transferCommander,
     removeMember,
     leaveRoom,
+    addManualMember,
     saveCurrentWave,
     loadWave,
     deleteWave,

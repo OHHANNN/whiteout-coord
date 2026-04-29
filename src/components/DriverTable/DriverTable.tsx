@@ -22,6 +22,8 @@ interface DriverTableProps {
   onSetCounterRally: (uid: string, value: boolean) => void;
   onRemove: (uid: string) => void;
   onTransferCommander?: (uid: string, name: string) => void;
+  /** 編輯代管車頭（重命名 / 改行軍）→ 開 modal。只有 commander 才會傳。 */
+  onEditManual?: (uid: string) => void;
   canRemove: boolean;
   canEditOthers: boolean;
 }
@@ -153,6 +155,7 @@ export function DriverTable({
   onSetCounterRally,
   onRemove,
   onTransferCommander,
+  onEditManual,
   canRemove,
   canEditOthers,
 }: DriverTableProps) {
@@ -327,12 +330,51 @@ export function DriverTable({
 
               <td data-label={t('room.col_status')}>
                 <div className={styles.statusRow}>
-                  <span className={`${styles.status} ${styles[member.status]}`}>
-                    <span className={styles.dot} />
-                    {t(`room.status_${member.status}`)}
-                  </span>
+                  {member.isManual ? (
+                    // 代管車頭：顯示靜態 PROXY tag、不顯示 online/offline dot
+                    <span className={styles.manualTag}>
+                      {t('room.manual_label')}
+                    </span>
+                  ) : (
+                    <span className={`${styles.status} ${styles[member.status]}`}>
+                      <span className={styles.dot} />
+                      {t(`room.status_${member.status}`)}
+                    </span>
+                  )}
                   {(() => {
                     const items: ActionItem[] = [];
+
+                    // 代管車頭：commander 專屬的編輯 / 刪除動作（其他選項都不適用）
+                    if (member.isManual) {
+                      // 重命名 / 改行軍 → 因為會動 march time、鎖定後就禁
+                      if (canEditThisRow && onEditManual) {
+                        items.push({
+                          label: t('room.rename_driver'),
+                          icon: '✎',
+                          onSelect: () => onEditManual(uid),
+                        });
+                      }
+                      if (canEditThisRow) {
+                        items.push({
+                          label: isCounterRally
+                            ? t('room.unset_counter_rally')
+                            : t('room.set_counter_rally'),
+                          icon: '⚡',
+                          onSelect: () => onSetCounterRally(uid, !isCounterRally),
+                        });
+                      }
+                      if (canRemove) {
+                        items.push({
+                          label: t('room.confirm_remove_short'),
+                          icon: '×',
+                          variant: 'danger',
+                          onSelect: () => onRemove(uid),
+                        });
+                      }
+                      return items.length > 0 ? <RowActionsMenu items={items} /> : null;
+                    }
+
+                    // 真人車頭：原本邏輯
                     // 自己 / commander 都可以切換 反集結 標記
                     if (canEditThisRow) {
                       items.push({

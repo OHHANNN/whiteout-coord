@@ -4,7 +4,11 @@
  */
 
 export type MemberRole = 'commander' | 'driver';
-export type MemberStatus = 'ready' | 'adjusting' | 'offline';
+/**
+ * 'manual' = 指揮官代建的車頭，沒有真人連線、無 online/offline 概念。
+ * 會在 UI 顯示 "代管" tag 而不是 dot 燈。
+ */
+export type MemberStatus = 'ready' | 'adjusting' | 'offline' | 'manual';
 /**
  * 集結參與類型：
  *   driver    = 車頭，發起自己的集結（有 march / rally / offset / launch）
@@ -117,6 +121,13 @@ export interface Member {
    * 純標記用、不影響時間計算；勾選後整列背景變色提醒 commander。
    */
   counterRally?: boolean;
+  /**
+   * 是否為指揮官代建的「代管車頭」（沒有真人連線）。
+   * - 不參與 presence / 5h 自動清離線
+   * - 任何 commander 都能編輯（已由 security rules 的 commander 條款覆蓋）
+   * - status 預設 'manual'
+   */
+  isManual?: boolean;
 }
 
 export interface Room {

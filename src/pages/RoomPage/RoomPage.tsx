@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 
+import { AddDriverModal } from '@/components/AddDriverModal/AddDriverModal';
 import { BattleHistory } from '@/components/BattleHistory/BattleHistory';
 import { Button } from '@/components/Button/Button';
 import { CommanderPanel } from '@/components/CommanderPanel/CommanderPanel';
@@ -43,6 +44,8 @@ export function RoomPage() {
   );
   const [muted, setMuted] = useLocalStorage<boolean>(MUTE_STORAGE_KEY, false);
   const [toast, setToast] = useState<{ msg: string; variant: 'success' | 'error' } | null>(null);
+  // null = 關閉；'add' = 開啟新增 modal；其他字串 = 編輯該 uid 的代管車頭
+  const [driverModalState, setDriverModalState] = useState<'add' | string | null>(null);
 
   const {
     loading,
@@ -56,6 +59,7 @@ export function RoomPage() {
     transferCommander,
     removeMember,
     leaveRoom,
+    addManualMember,
     saveCurrentWave,
     loadWave,
     deleteWave,
@@ -145,15 +149,33 @@ export function RoomPage() {
 
       const STALE_MS = 5 * 60 * 60 * 1000; // 5 小時（對齊決戰王城活動長度）
       const now = Date.now();
-      const toRemove: string[] = [];
+      const staleRealUids: string[] = [];
 
+      // 1. 找出真人車頭裡離線過久的（manual 不參與時間判斷 → 永遠不在這份清單）
       Object.entries(members).forEach(([uid, m]) => {
-        // 不踢指揮官自己 / 還在線的人
         if (uid === meta.commanderId) return;
+        if (m.isManual) return;
         if (m.status !== 'offline') return;
         if (!m.lastSeen) return;
-        if (now - m.lastSeen > STALE_MS) toRemove.push(uid);
+        if (now - m.lastSeen > STALE_MS) staleRealUids.push(uid);
       });
+
+      const toRemove: string[] = [...staleRealUids];
+
+      // 2. 把這次要清的真人扣掉後，commander 以外是否還有真人留著？
+      //    都沒有 → 連 manual 一起清空（避免代管條目永遠殘留)
+      const remainingNonCommanderReal = Object.entries(members).filter(
+        ([uid, m]) =>
+          uid !== meta.commanderId &&
+          !m.isManual &&
+          !staleRealUids.includes(uid)
+      ).length;
+
+      if (staleRealUids.length > 0 && remainingNonCommanderReal === 0) {
+        Object.entries(members).forEach(([uid, m]) => {
+          if (m.isManual) toRemove.push(uid);
+        });
+      }
 
       if (toRemove.length === 0) return;
       toRemove.forEach((uid) =>
@@ -378,13 +400,43 @@ export function RoomPage() {
     const member = members[targetUid];
     if (!member) return;
     const ok = await confirm({
-      message: t('room.confirm_remove', { name: member.name }),
+      message: member.isManual
+        ? t('room.confirm_remove_manual', { name: member.name })
+        : t('room.confirm_remove', { name: member.name }),
       variant: 'danger',
     });
     if (!ok) return;
     removeMember(targetUid).catch(() =>
       setToast({ msg: t('error.remove_failed'), variant: 'error' })
     );
+  };
+
+  // 代管車頭：新增 / 編輯共用同一個 modal
+  const editingManualMember =
+    driverModalState && driverModalState !== 'add'
+      ? members[driverModalState]
+      : null;
+
+  const handleSubmitManual = async (name: string, marchSeconds: number) => {
+    // 失敗時 throw 帶 i18n 訊息的 Error，modal 會顯示在 inline error 區
+    if (driverModalState === 'add') {
+      try {
+        await addManualMember(name, marchSeconds);
+      } catch (err) {
+        const detail = err instanceof Error ? err.message : String(err);
+        throw new Error(`${t('error.add_driver_failed')} · ${detail}`);
+      }
+    } else if (driverModalState && editingManualMember) {
+      try {
+        await updateMember(driverModalState, {
+          name: name.slice(0, 20),
+          marchSeconds: Math.max(0, Math.min(600, Math.floor(marchSeconds))),
+        });
+      } catch (err) {
+        const detail = err instanceof Error ? err.message : String(err);
+        throw new Error(`${t('error.rename_driver_failed')} · ${detail}`);
+      }
+    }
   };
 
   // 偵測指揮官是否離線過久 → 允許其他人接管
@@ -427,6 +479,14 @@ export function RoomPage() {
         message={toast?.msg ?? null}
         variant={toast?.variant}
         onClose={() => setToast(null)}
+      />
+      <AddDriverModal
+        open={driverModalState !== null}
+        mode={driverModalState === 'add' ? 'add' : 'edit'}
+        initialName={editingManualMember?.name}
+        initialMarchSeconds={editingManualMember?.marchSeconds}
+        onClose={() => setDriverModalState(null)}
+        onSubmit={handleSubmitManual}
       />
       <Panel label={`ROOM · ${pin}`} labelRight="BRIDGE // LIVE">
         <header className={styles.header}>
@@ -520,6 +580,14 @@ export function RoomPage() {
               </h2>
               {me && !meta.locked && isCommander && (
                 <div className={styles.myActions}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setDriverModalState('add')}
+                    title={t('room.add_driver_hint')}
+                  >
+                    {t('room.add_driver_btn')}
+                  </Button>
                   <label className={styles.check} title={t('room.rallying_hint')}>
                     <input
                       type="checkbox"
@@ -553,6 +621,9 @@ export function RoomPage() {
               onRemove={handleRemoveMember}
               onTransferCommander={
                 isCommander ? handleTransferCommander : undefined
+              }
+              onEditManual={
+                isCommander ? (uid) => setDriverModalState(uid) : undefined
               }
               canRemove={isCommander}
               canEditOthers={isCommander}

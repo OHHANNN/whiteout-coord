@@ -1,0 +1,260 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background:
+    radial-gradient(ellipse at center, rgba(0, 255, 255, 0.04), transparent 60%),
+    rgba(3, 7, 20, 0.85);
+  backdrop-filter: blur(6px);
+  animation: fadeIn 0.18s ease-out;
+
+  @include reduced-motion {
+    animation: none;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.dialog {
+  position: relative;
+  max-width: 460px;
+  width: 100%;
+  background: $bg-panel;
+  border: 1px solid $hud-cyan;
+  padding: 32px 28px 24px;
+  box-shadow:
+    0 0 32px rgba(0, 255, 255, 0.18),
+    0 12px 32px rgba(0, 0, 0, 0.6);
+  animation: slideIn 0.2s ease-out;
+
+  @include reduced-motion {
+    animation: none;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-12px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+// 四個角落 HUD bracket
+.cornerTL,
+.cornerTR,
+.cornerBL,
+.cornerBR {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-color: $hud-cyan;
+  border-style: solid;
+  pointer-events: none;
+}
+.cornerTL {
+  top: -1px;
+  left: -1px;
+  border-width: 2px 0 0 2px;
+}
+.cornerTR {
+  top: -1px;
+  right: -1px;
+  border-width: 2px 2px 0 0;
+}
+.cornerBL {
+  bottom: -1px;
+  left: -1px;
+  border-width: 0 0 2px 2px;
+}
+.cornerBR {
+  bottom: -1px;
+  right: -1px;
+  border-width: 0 2px 2px 0;
+}
+
+.title {
+  font-family: $font-display;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: $hud-cyan;
+  text-shadow: $glow-cyan;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.hint {
+  font-family: $font-mono;
+  font-size: 11px;
+  color: $text-dim;
+  margin-bottom: 18px;
+  letter-spacing: 0.05em;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.label {
+  font-family: $font-display;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: $hud-cyan-dim;
+  text-transform: uppercase;
+}
+
+.input {
+  height: 38px;
+  padding: 0 12px;
+  background: $bg-elevated;
+  border: 1px solid $hud-cyan-line;
+  font-family: $font-mono;
+  font-size: 14px;
+  color: $hud-cyan;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+
+  &:focus {
+    border-color: $hud-cyan;
+    box-shadow: 0 0 0 1px $hud-cyan;
+  }
+
+  &::placeholder {
+    color: $text-dim;
+  }
+}
+
+// 行軍輸入：對齊 DriverTable row 內的 inline 風格（± / 中央 mono 輸入 / ±）
+// modal 是 form 不是 dense table、所以尺寸略放大 (32px) 比 row (26px) 大一階
+.marchEdit {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.marchInput {
+  width: 100px;
+  height: 32px;
+  padding: 0 6px;
+  background: $bg-elevated;
+  border: 1px solid $hud-cyan-line;
+  font-family: $font-mono;
+  font-size: 16px;
+  color: $hud-cyan;
+  text-align: center;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+
+  &:focus {
+    border-color: $hud-cyan;
+    box-shadow: 0 0 0 1px $hud-cyan;
+  }
+
+  &::placeholder {
+    color: $text-dim;
+    font-size: 14px;
+  }
+}
+
+.miniBtn {
+  width: 32px;
+  height: 32px;
+  border: 1px solid $hud-cyan-line;
+  color: $hud-cyan;
+  background: transparent;
+  cursor: pointer;
+  font-family: $font-mono;
+  font-size: 16px;
+  line-height: 1;
+  transition: background 0.15s, border-color 0.15s;
+
+  &:hover {
+    background: $hud-cyan-soft;
+    border-color: $hud-cyan;
+  }
+}
+
+.error {
+  min-height: 18px;
+  font-family: $font-mono;
+  font-size: 11px;
+  color: $alert;
+  text-shadow: $glow-alert;
+  letter-spacing: 0.04em;
+  margin-bottom: 8px;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+.cancelBtn,
+.submitBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 0 20px;
+  font-family: $font-display;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border: 1px solid;
+  background: transparent;
+  transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+  @include chamfered(6px);
+}
+
+.cancelBtn {
+  border-color: $hud-cyan-line;
+  color: $text-muted;
+
+  &:hover {
+    border-color: $hud-cyan;
+    color: $hud-cyan;
+    background: $hud-cyan-soft;
+  }
+}
+
+.submitBtn {
+  border-color: $hud-cyan;
+  color: $bg-deep;
+  background: $hud-cyan;
+  box-shadow: $glow-cyan;
+
+  &:hover {
+    box-shadow: 0 0 14px rgba(0, 255, 255, 0.8);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+}

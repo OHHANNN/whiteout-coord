@@ -76,7 +76,7 @@
               ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 600 || newData.val() == null"
             },
             "status": {
-              ".validate": "newData.val() == 'ready' || newData.val() == 'adjusting' || newData.val() == 'offline' || newData.val() == null"
+              ".validate": "newData.val() == 'ready' || newData.val() == 'adjusting' || newData.val() == 'offline' || newData.val() == 'manual' || newData.val() == null"
             },
             "lastSeen": {
               ".validate": "newData.isNumber() || newData.val() == null"
@@ -94,6 +94,9 @@
               ".validate": "newData.val() == 'driver' || newData.val() == 'passenger' || newData.val() == null"
             },
             "counterRally": {
+              ".validate": "newData.isBoolean() || newData.val() == null"
+            },
+            "isManual": {
               ".validate": "newData.isBoolean() || newData.val() == null"
             },
             "$other": { ".validate": false }
