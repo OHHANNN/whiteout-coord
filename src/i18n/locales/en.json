@@ -67,10 +67,14 @@
         "body": "Uncheck 'I'm rallying too' to coordinate without joining the rally — you won't appear in the driver list."
       },
       "7": {
+        "title": "Troop ratio",
+        "body": "Each driver can show their Shield:Spear:Archer composition (e.g. 5:2:3) so everyone can align. As commander you can edit any driver's."
+      },
+      "8": {
         "title": "Lock when ready to fire",
         "body": "Locking freezes all settings and auto-snapshots a battle log. Only press when you're committing to launch."
       },
-      "8": {
+      "9": {
         "title": "Settings live here",
         "body": "Sound, language, theme, timezone, leave room — all in the gear menu."
       }

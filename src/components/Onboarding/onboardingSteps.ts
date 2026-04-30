@@ -79,15 +79,21 @@ export function getCommanderSteps(t: TFunction): Step[] {
       placement: 'bottom',
     },
     {
-      target: '[data-tour="lock-start"]',
+      target: '[data-tour="troop-cell"]',
       title: t('onboarding.commander.7.title'),
       content: t('onboarding.commander.7.body'),
       placement: 'top',
     },
     {
-      target: '[data-tour="settings"]',
+      target: '[data-tour="lock-start"]',
       title: t('onboarding.commander.8.title'),
       content: t('onboarding.commander.8.body'),
+      placement: 'top',
+    },
+    {
+      target: '[data-tour="settings"]',
+      title: t('onboarding.commander.9.title'),
+      content: t('onboarding.commander.9.body'),
       placement: 'bottom',
     },
   ];
