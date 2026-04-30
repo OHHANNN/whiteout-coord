@@ -5,6 +5,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { LangSwitch } from '@/components/LangSwitch/LangSwitch';
 import { NamePrompt } from '@/components/NamePrompt/NamePrompt';
 import { Onboarding } from '@/components/Onboarding/Onboarding';
+import { TzSwitch } from '@/components/TzSwitch/TzSwitch';
 import { UtcClock } from '@/components/UtcClock/UtcClock';
 import { Button } from '@/components/ui/button';
 import {
@@ -96,6 +97,7 @@ export function EntryPage() {
   return (
     <div className="bg-background relative min-h-screen w-full">
       <div className="absolute top-4 right-4 z-10 flex items-center gap-1">
+        <TzSwitch />
         <LangSwitch />
         <ThemeToggle />
       </div>
