@@ -13,7 +13,7 @@ export interface Language {
 }
 
 export const LANGUAGES: Language[] = [
-  { code: 'zh-TW', nativeLabel: '繁體中文', shortLabel: '繁中' },
+  { code: 'zh', nativeLabel: '繁體中文', shortLabel: '繁中' },
   { code: 'en', nativeLabel: 'English', shortLabel: 'EN' },
   { code: 'ko', nativeLabel: '한국어', shortLabel: 'KO' },
 ];

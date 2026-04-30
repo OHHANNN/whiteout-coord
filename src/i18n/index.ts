@@ -5,7 +5,7 @@ import { initReactI18next } from 'react-i18next';
 import { SUPPORTED_LANG_CODES } from './languages';
 import en from './locales/en.json';
 import ko from './locales/ko.json';
-import zhTW from './locales/zh-TW.json';
+import zh from './locales/zh.json';
 
 export const LANG_STORAGE_KEY = 'whiteout-coord:lang';
 
@@ -14,14 +14,14 @@ i18n
   .use(initReactI18next)
   .init({
     resources: {
-      'zh-TW': { translation: zhTW },
+      zh: { translation: zh },
       en: { translation: en },
       ko: { translation: ko },
     },
-    fallbackLng: 'zh-TW',
+    fallbackLng: 'zh',
     supportedLngs: SUPPORTED_LANG_CODES,
-    // 讓 'en-US' / 'en-GB' 自動降到 'en'、'ko-KR' 降到 'ko'
-    // 沒這個的話、装置回 'en-US' 但 supportedLngs 沒有 'en-US'、會直接走 fallbackLng
+    // 讓 'en-US'→'en'、'ko-KR'→'ko'、'zh-TW'/'zh-CN'/'zh-Hant'/'zh-Hans'→'zh'
+    // 沒這個的話、装置回 'zh-TW' 但 supportedLngs 沒有 'zh-TW'、會走 fallbackLng
     nonExplicitSupportedLngs: true,
     interpolation: {
       escapeValue: false, // React 會處理 XSS
