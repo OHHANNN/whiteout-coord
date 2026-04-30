@@ -37,25 +37,32 @@ export function useLocalStorage<T>(
 
   const setStoredValue = useCallback(
     (updater: T | ((prev: T) => T)) => {
+      let toBroadcast: string | null = null;
       setValue((prev) => {
         const next =
           typeof updater === 'function' ? (updater as (p: T) => T)(prev) : updater;
-        let serialized: string;
         try {
-          serialized = JSON.stringify(next);
+          const serialized = JSON.stringify(next);
           window.localStorage.setItem(key, serialized);
+          toBroadcast = serialized;
         } catch {
           // 忽略（私密模式等）
-          return next;
         }
-        // 同 tab 廣播：通知其他 useLocalStorage(同 key) 的 instance 更新
-        window.dispatchEvent(
-          new CustomEvent<BroadcastDetail>(LOCAL_BROADCAST_EVENT, {
-            detail: { key, value: serialized },
-          })
-        );
         return next;
       });
+      // 同 tab 廣播：dispatch 排到 microtask、不在 setValue updater 內
+      // 否則同步觸發其他 useLocalStorage 的 setValue → React 抱怨
+      // 「Cannot update component while rendering different component」
+      if (toBroadcast !== null) {
+        const payload = toBroadcast;
+        queueMicrotask(() => {
+          window.dispatchEvent(
+            new CustomEvent<BroadcastDetail>(LOCAL_BROADCAST_EVENT, {
+              detail: { key, value: payload },
+            })
+          );
+        });
+      }
     },
     [key]
   );

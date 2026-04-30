@@ -52,9 +52,11 @@ export function beep(freq: number, duration = 0.15, volume = 0.35): void {
     return;
   }
   if (ctx.state !== 'running') {
+    // 不在這裡呼叫 ctx.resume()：beep 從 setInterval / event listener 觸發、
+    // 不在 user gesture 內、resume() 會被 Chrome 擋下並噴 console warning
+    // (The AudioContext was not allowed to start...)
+    // unlockAudio() 會在下次 user 互動時重新開啟、靜默跳過這次嗶聲就好
     logWarn('audio · beep skipped: ctx state =', ctx.state);
-    // 嘗試自救：再 resume 一次（某些瀏覽器一旦 inactive 會 suspend）
-    ctx.resume().catch(() => undefined);
     return;
   }
 
