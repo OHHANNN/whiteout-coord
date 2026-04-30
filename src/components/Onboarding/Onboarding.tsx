@@ -30,11 +30,14 @@ interface OnboardingProps {
 }
 
 /**
- * react-joyride v3 包一層 · v3 改動：
- *   - named export `Joyride`（v2 是 default）
- *   - 用 `onEvent` callback 不是 `callback`
- *   - `skipBeacon` 從 step level 改到 Options 全域
- *   - styles 直接 inline 在 props（primaryColor / textColor 等）
+ * react-joyride v3 包裝。v3 vs v2 重要差異：
+ *   - import { Joyride } 是 named export
+ *   - run 預設 false（v2 是 true）→ 必須明確傳 true 才會跑
+ *   - callback → onEvent，多一個 controls 第二參數
+ *   - 顯示用的設定（showProgress / skipBeacon / 顏色 / zIndex / buttons）
+ *     全部搬到 options={{}} prop、不再是 top-level
+ *   - showSkipButton 砍掉、改用 options.buttons 陣列加 'skip'
+ *   - styles.options 砍掉、theme 顏色改放 options
  */
 export function Onboarding({ tour, forceRun, onForceFinish }: OnboardingProps) {
   const { t } = useTranslation();
@@ -68,11 +71,20 @@ export function Onboarding({ tour, forceRun, onForceFinish }: OnboardingProps) {
     <Joyride
       steps={steps}
       run={run}
-      onEvent={handleEvent}
       continuous
-      showProgress
-      showSkipButton
-      skipBeacon
+      onEvent={handleEvent}
+      options={{
+        showProgress: true,
+        skipBeacon: true,
+        buttons: ['back', 'skip', 'primary'],
+        // 跟 shadcn theme tokens 對齊
+        primaryColor: 'oklch(0.21 0.006 285.885)',
+        textColor: 'oklch(0.141 0.005 285.823)',
+        backgroundColor: 'oklch(1 0 0)',
+        arrowColor: 'oklch(1 0 0)',
+        overlayColor: 'rgba(0, 0, 0, 0.5)',
+        zIndex: 100,
+      }}
       locale={{
         back: t('onboarding.back'),
         close: t('onboarding.close'),
@@ -80,12 +92,6 @@ export function Onboarding({ tour, forceRun, onForceFinish }: OnboardingProps) {
         next: t('onboarding.next'),
         skip: t('onboarding.skip'),
       }}
-      primaryColor="oklch(0.21 0.006 285.885)"
-      textColor="oklch(0.141 0.005 285.823)"
-      backgroundColor="oklch(1 0 0)"
-      arrowColor="oklch(1 0 0)"
-      overlayColor="rgba(0, 0, 0, 0.5)"
-      zIndex={100}
     />
   );
 }
