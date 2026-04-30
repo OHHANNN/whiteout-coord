@@ -77,13 +77,17 @@ export function Onboarding({ tour, forceRun, onForceFinish }: OnboardingProps) {
         showProgress: true,
         skipBeacon: true,
         buttons: ['back', 'skip', 'primary'],
+        // sticky header 高 56px、捲動目標時上方留 80px clearance（header + buffer）
+        // 不留的話 spotlight 會被 header 蓋掉
+        scrollOffset: 80,
         // 跟 shadcn theme tokens 對齊
         primaryColor: 'oklch(0.21 0.006 285.885)',
         textColor: 'oklch(0.141 0.005 285.823)',
         backgroundColor: 'oklch(1 0 0)',
         arrowColor: 'oklch(1 0 0)',
         overlayColor: 'rgba(0, 0, 0, 0.5)',
-        zIndex: 100,
+        // z-index 200 蓋過 sticky header (z-30) + Sheet (z-50) 等
+        zIndex: 200,
       }}
       locale={{
         back: t('onboarding.back'),
