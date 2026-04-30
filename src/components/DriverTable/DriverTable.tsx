@@ -446,7 +446,7 @@ export function DriverTable({
                 </TableCell>
 
                 {/* 兵種比例 */}
-                <TableCell>
+                <TableCell data-tour={isMe ? 'troop-cell' : undefined}>
                   <TroopRatioCell
                     ratio={member.troopRatio}
                     editable={canEditThisRow}
@@ -658,7 +658,10 @@ export function DriverTable({
                   </span>
                 )}
               </div>
-              <div className="flex items-center justify-between gap-2">
+              <div
+                data-tour={isMe ? 'troop-cell' : undefined}
+                className="flex items-center justify-between gap-2"
+              >
                 <span className="text-muted-foreground text-xs">
                   {t('room.col_troop')}
                 </span>

@@ -120,15 +120,21 @@ export function getDriverSteps(t: TFunction): Step[] {
       placement: 'top',
     },
     {
-      target: '[data-tour="offset-cell"]',
+      target: '[data-tour="troop-cell"]',
       title: t('onboarding.driver.5.title'),
       content: t('onboarding.driver.5.body'),
       placement: 'top',
     },
     {
-      target: '[data-tour="settings"]',
+      target: '[data-tour="offset-cell"]',
       title: t('onboarding.driver.6.title'),
       content: t('onboarding.driver.6.body'),
+      placement: 'top',
+    },
+    {
+      target: '[data-tour="settings"]',
+      title: t('onboarding.driver.7.title'),
+      content: t('onboarding.driver.7.body'),
       placement: 'bottom',
     },
   ];

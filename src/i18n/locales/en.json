@@ -78,7 +78,7 @@
     "driver": {
       "1": {
         "title": "This is your car",
-        "body": "Your row is always first with a blue ring. Others sort by march time, longest first."
+        "body": "Your row is always at the top. Others sort by march time, longest first."
       },
       "2": {
         "title": "Watch this number",
@@ -93,10 +93,14 @@
         "body": "The rally duration you select in-game. Default 5min — some commanders use 10min."
       },
       "5": {
+        "title": "Troop ratio",
+        "body": "Show your Shield:Spear:Archer ratio (e.g. 5:2:3). Lets the commander and other drivers see your composition at a glance for easier coordination."
+      },
+      "6": {
         "title": "Vanguard tank?",
         "body": "Set -2s to land 2 seconds early (shield-tank tactic). Most drivers leave this at 0."
       },
-      "6": {
+      "7": {
         "title": "Make sure sound is on",
         "body": "Beeps fire at countdown. If you can't hear them, check the gear menu for mute toggle."
       }
@@ -112,7 +116,7 @@
       },
       "3": {
         "title": "Multi-timezone",
-        "body": "Pick your timezone here. Each user can pick differently — Firebase stores UTC, displays per-user. Countdowns stay aligned."
+        "body": "Pick your timezone here. Each user can pick differently — countdowns stay aligned."
       }
     }
   },
