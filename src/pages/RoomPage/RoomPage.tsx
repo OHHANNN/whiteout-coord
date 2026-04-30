@@ -10,6 +10,7 @@ import { CommanderPanel } from '@/components/CommanderPanel/CommanderPanel';
 import { useConfirm } from '@/components/ConfirmDialog/ConfirmDialog';
 import { DriverTable } from '@/components/DriverTable/DriverTable';
 import { NamePrompt } from '@/components/NamePrompt/NamePrompt';
+import { Onboarding } from '@/components/Onboarding/Onboarding';
 import { SettingsMenu } from '@/components/SettingsMenu/SettingsMenu';
 import { PassengerList } from '@/components/PassengerList/PassengerList';
 import { UtcClock } from '@/components/UtcClock/UtcClock';
@@ -65,6 +66,10 @@ export function RoomPage() {
   const [renameMeOpen, setRenameMeOpen] = useState(false);
   // 戰報歷史 sheet（從右側滑入）
   const [battleHistoryOpen, setBattleHistoryOpen] = useState(false);
+  // SettingsMenu 觸發的「重看教學 / 進階教學」forceRun
+  const [tourReplay, setTourReplay] = useState<
+    'commander' | 'driver' | 'advanced' | null
+  >(null);
 
   const {
     loading,
@@ -490,7 +495,7 @@ export function RoomPage() {
       <header className="bg-background/95 supports-[backdrop-filter]:bg-background/80 sticky top-0 z-30 w-full border-b backdrop-blur">
         <div className="mx-auto flex h-14 max-w-7xl items-center gap-3 px-4 sm:px-6">
           {/* PIN badge */}
-          <div className="flex items-center gap-2">
+          <div data-tour="pin-badge" className="flex items-center gap-2">
             <span className="bg-success size-2 animate-pulse rounded-full" />
             <span className="text-foreground mono-nums text-sm font-semibold tracking-wider">
               {pin.slice(0, 4)}·{pin.slice(4)}
@@ -553,6 +558,10 @@ export function RoomPage() {
               muted={muted}
               onToggleMute={handleToggleMute}
               onLeave={handleLeave}
+              onReplayTour={() =>
+                setTourReplay(isCommander ? 'commander' : 'driver')
+              }
+              onAdvancedTour={() => setTourReplay('advanced')}
             />
           </div>
         </div>
@@ -615,6 +624,7 @@ export function RoomPage() {
               <div className="flex items-center gap-3">
                 {(meta.battleOrder?.length ?? 0) > 0 && (
                   <Button
+                    data-tour="battle-history"
                     variant="outline"
                     size="sm"
                     onClick={() => setBattleHistoryOpen(true)}
@@ -630,6 +640,7 @@ export function RoomPage() {
                 {me && !meta.locked && isCommander && (
                   <>
                     <Button
+                      data-tour="add-driver"
                       variant="outline"
                       size="sm"
                       onClick={() => setDriverModalState('add')}
@@ -637,7 +648,10 @@ export function RoomPage() {
                     >
                       {t('room.add_driver_btn')}
                     </Button>
-                    <div className="flex items-center gap-2">
+                    <div
+                      data-tour="rallying-checkbox"
+                      className="flex items-center gap-2"
+                    >
                       <Checkbox
                         id="rallying"
                         checked={me.rallying !== false}
@@ -732,6 +746,18 @@ export function RoomPage() {
         open={battleHistoryOpen}
         onOpenChange={setBattleHistoryOpen}
       />
+
+      {/* Onboarding · 第一次進房自動跳對應 tour、之後可從 settings 重看 */}
+      {tourReplay ? (
+        <Onboarding
+          key={tourReplay}
+          tour={tourReplay}
+          forceRun
+          onForceFinish={() => setTourReplay(null)}
+        />
+      ) : (
+        <Onboarding tour={isCommander ? 'commander' : 'driver'} />
+      )}
     </div>
   );
 }

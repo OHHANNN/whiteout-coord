@@ -13,7 +13,108 @@
     "title": "Settings",
     "theme": "Theme",
     "language": "Language",
-    "timezone": "Timezone"
+    "timezone": "Timezone",
+    "replay_tour": "Replay Tour",
+    "advanced_tour": "Advanced Tour"
+  },
+  "onboarding": {
+    "back": "Back",
+    "close": "Close",
+    "done": "Done",
+    "next": "Next",
+    "skip": "Skip",
+    "entry": {
+      "1": {
+        "title": "King City Command",
+        "body": "Real-time rally coordination for Whiteout Survival King City events. No install — open the link and go."
+      },
+      "2": {
+        "title": "Enter the 8-digit PIN",
+        "body": "Type the PIN your commander shared. Everyone using the same PIN joins the same operation room."
+      },
+      "3": {
+        "title": "No room yet? Generate one",
+        "body": "The first to enter becomes commander. Others use the same PIN to join. Don't forget to share the link."
+      },
+      "4": {
+        "title": "Click here to enter",
+        "body": "Next you'll set your callsign and pick Driver / Passenger. Driver = leads own rally; Passenger = joins someone else's."
+      }
+    },
+    "commander": {
+      "1": {
+        "title": "You're the commander",
+        "body": "First in this PIN, so you're auto-assigned commander. You set target time, lock the op, kick people, transfer command."
+      },
+      "2": {
+        "title": "Set arrival time",
+        "body": "Type the rally arrival time. HH:MM:SS — each field independent, you can edit just minutes if needed."
+      },
+      "3": {
+        "title": "Don't want to math? Use shortcuts",
+        "body": "+5m = arrive in 5 minutes. +6m keeps current seconds (counter-rally). ±10s / ±1s for fine-tuning."
+      },
+      "4": {
+        "title": "Whole-room countdown",
+        "body": "Everyone sees this countdown. Setting target time syncs to all drivers instantly."
+      },
+      "5": {
+        "title": "Add proxy drivers",
+        "body": "For guildmates not using this tool — you can add a placeholder driver with their march time pre-set."
+      },
+      "6": {
+        "title": "Coordinator vs participant",
+        "body": "Uncheck 'I'm rallying too' to coordinate without joining the rally — you won't appear in the driver list."
+      },
+      "7": {
+        "title": "Lock when ready to fire",
+        "body": "Locking freezes all settings and auto-snapshots a battle log. Only press when you're committing to launch."
+      },
+      "8": {
+        "title": "Settings live here",
+        "body": "Sound, language, theme, timezone, leave room — all in the gear menu."
+      }
+    },
+    "driver": {
+      "1": {
+        "title": "This is your car",
+        "body": "Your row is always first with a blue ring. Others sort by march time, longest first."
+      },
+      "2": {
+        "title": "Watch this number",
+        "body": "After commander sets time, this counts down. <10s turns red and pulses. At 0, press 'Start Rally' in-game immediately."
+      },
+      "3": {
+        "title": "Set your march first",
+        "body": "Seconds to march from your city to the target. Use ± to adjust or type directly."
+      },
+      "4": {
+        "title": "Rally window",
+        "body": "The rally duration you select in-game. Default 5min — some commanders use 10min."
+      },
+      "5": {
+        "title": "Vanguard tank?",
+        "body": "Set -2s to land 2 seconds early (shield-tank tactic). Most drivers leave this at 0."
+      },
+      "6": {
+        "title": "Make sure sound is on",
+        "body": "Beeps fire at countdown. If you can't hear them, check the gear menu for mute toggle."
+      }
+    },
+    "advanced": {
+      "1": {
+        "title": "Row ⋯ menu",
+        "body": "Tap ⋯ on any driver row to rename, switch role, mark counter-rally, transfer command, or kick."
+      },
+      "2": {
+        "title": "Battle history",
+        "body": "Every locked op auto-saves a snapshot. Open this anytime to see who was online and exact landing times."
+      },
+      "3": {
+        "title": "Multi-timezone",
+        "body": "Pick your timezone here. Each user can pick differently — Firebase stores UTC, displays per-user. Countdowns stay aligned."
+      }
+    }
   },
   "brand": {
     "kicker": "WHITEOUT · SURVIVAL",

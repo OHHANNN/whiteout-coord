@@ -210,7 +210,7 @@ export function CommanderPanel({
     <aside className="flex flex-col gap-4">
 
       {/* TARGET 控制 */}
-      <Card>
+      <Card data-tour="target-card">
         <CardHeader className="pb-3">
           <CardTitle className="text-muted-foreground text-xs font-medium tracking-widest uppercase">
             {t('room.target_landing')}
@@ -291,8 +291,8 @@ export function CommanderPanel({
 
           <Separator className="my-1" />
 
-          {/* nudge -10/-1/+1/+10 秒 */}
-          <div className="grid grid-cols-4 gap-1.5">
+          {/* nudge -10/-1/+1/+10 秒（包 onboarding 用 wrapper、time-shortcuts 涵蓋下面 +5m..+30m 也可以） */}
+          <div data-tour="time-shortcuts" className="grid grid-cols-4 gap-1.5">
             {[-10, -1, 1, 10].map((d) => (
               <Button
                 key={d}
@@ -330,7 +330,7 @@ export function CommanderPanel({
       </Card>
 
       {/* T-MINUS 落地倒數（OBJECTIVE 標籤輸入放在右上） */}
-      <Card>
+      <Card data-tour="t-minus">
         <CardHeader className="flex flex-row items-center justify-between gap-2 pb-3">
           <CardTitle className="text-muted-foreground shrink-0 text-xs font-medium tracking-widest whitespace-nowrap uppercase">
             {t('room.t_minus')}
@@ -365,6 +365,7 @@ export function CommanderPanel({
 
       {/* LOCK / UNLOCK */}
       <Button
+        data-tour="lock-start"
         size="lg"
         variant={meta.locked ? 'destructive' : 'default'}
         onClick={() => onUpdate({ locked: !meta.locked })}

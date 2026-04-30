@@ -377,7 +377,11 @@ export function DriverTable({
               const items = buildItems(uid, member, isMe, isCounterRally, canEditThisRow);
 
             return (
-              <TableRow key={uid} className={cn(rowHighlight, isPassive && 'opacity-50')}>
+              <TableRow
+                key={uid}
+                data-tour={isMe ? 'self-row' : undefined}
+                className={cn(rowHighlight, isPassive && 'opacity-50')}
+              >
                 {/* 車頭名稱 + chips */}
                 <TableCell>
                   <div className="flex flex-wrap items-center gap-1.5">
@@ -404,7 +408,7 @@ export function DriverTable({
                 </TableCell>
 
                 {/* 行軍 */}
-                <TableCell>
+                <TableCell data-tour={isMe ? 'march-cell' : undefined}>
                   <MarchCell
                     marchSeconds={member.marchSeconds}
                     editable={canEditThisMarch}
@@ -413,7 +417,7 @@ export function DriverTable({
                 </TableCell>
 
                 {/* 集結 5m / 10m */}
-                <TableCell>
+                <TableCell data-tour={isMe ? 'rally-toggle' : undefined}>
                   {canEditThisMarch ? (
                     <ToggleGroup
                       type="single"
@@ -437,7 +441,7 @@ export function DriverTable({
                 </TableCell>
 
                 {/* 偏移 */}
-                <TableCell>
+                <TableCell data-tour={isMe ? 'offset-cell' : undefined}>
                   <OffsetCell
                     offset={member.landingOffsetSeconds ?? 0}
                     editable={canEditThisMarch}
@@ -451,7 +455,7 @@ export function DriverTable({
                 </TableCell>
 
                 {/* 距發車（自己列加大） */}
-                <TableCell>
+                <TableCell data-tour={isMe ? 'until-launch' : undefined}>
                   <span
                     className={cn(
                       'mono-nums',
@@ -540,6 +544,7 @@ export function DriverTable({
         return (
           <div
             key={uid}
+            data-tour={isMe ? 'self-row' : undefined}
             className={cn(
               'bg-card text-card-foreground flex flex-col gap-3 rounded-lg border p-4',
               cardHighlight,
@@ -568,11 +573,16 @@ export function DriverTable({
                   </Badge>
                 )}
               </div>
-              {items.length > 0 && <RowActionsMenu items={items} />}
+              {items.length > 0 && (
+                <span data-tour={isMe ? 'row-actions' : undefined}>
+                  <RowActionsMenu items={items} />
+                </span>
+              )}
             </div>
 
             {/* 中間：距發車。自己 row 大字、其他人縮小 */}
             <div
+              data-tour={isMe ? 'until-launch' : undefined}
               className={cn(
                 'flex flex-col items-center gap-1',
                 isMe ? 'py-2' : 'py-1'

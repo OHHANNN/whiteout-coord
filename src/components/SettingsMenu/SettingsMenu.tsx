@@ -1,7 +1,9 @@
 import {
   Check,
   Clock,
+  Compass,
   Globe,
+  HelpCircle,
   LogOut,
   Monitor,
   Moon,
@@ -38,6 +40,10 @@ interface SettingsMenuProps {
   muted: boolean;
   onToggleMute: (next: boolean) => void;
   onLeave: () => void;
+  /** 重看角色教學（commander or driver、由 RoomPage 判斷） */
+  onReplayTour?: () => void;
+  /** 看進階功能教學（反集結 / 戰報 / 多時區） */
+  onAdvancedTour?: () => void;
 }
 
 /**
@@ -48,7 +54,13 @@ interface SettingsMenuProps {
  *   - 時區（IANA tz、按地區分組）
  *   - 離開房間（destructive）
  */
-export function SettingsMenu({ muted, onToggleMute, onLeave }: SettingsMenuProps) {
+export function SettingsMenu({
+  muted,
+  onToggleMute,
+  onLeave,
+  onReplayTour,
+  onAdvancedTour,
+}: SettingsMenuProps) {
   const { t, i18n } = useTranslation();
   const { theme, setTheme } = useTheme();
   const [tz, setTz] = useTimezone();
@@ -58,7 +70,12 @@ export function SettingsMenu({ muted, onToggleMute, onLeave }: SettingsMenuProps
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" aria-label={t('settings.title')}>
+        <Button
+          data-tour="settings"
+          variant="ghost"
+          size="icon"
+          aria-label={t('settings.title')}
+        >
           <Settings />
         </Button>
       </DropdownMenuTrigger>
@@ -165,6 +182,21 @@ export function SettingsMenu({ muted, onToggleMute, onLeave }: SettingsMenuProps
         </DropdownMenuSub>
 
         <DropdownMenuSeparator />
+
+        {onReplayTour && (
+          <DropdownMenuItem className="gap-3 py-2" onSelect={onReplayTour}>
+            <HelpCircle />
+            <span>{t('settings.replay_tour')}</span>
+          </DropdownMenuItem>
+        )}
+        {onAdvancedTour && (
+          <DropdownMenuItem className="gap-3 py-2" onSelect={onAdvancedTour}>
+            <Compass />
+            <span>{t('settings.advanced_tour')}</span>
+          </DropdownMenuItem>
+        )}
+
+        {(onReplayTour || onAdvancedTour) && <DropdownMenuSeparator />}
 
         <DropdownMenuItem
           variant="destructive"

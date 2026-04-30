@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { LangSwitch } from '@/components/LangSwitch/LangSwitch';
 import { NamePrompt } from '@/components/NamePrompt/NamePrompt';
+import { Onboarding } from '@/components/Onboarding/Onboarding';
 import { UtcClock } from '@/components/UtcClock/UtcClock';
 import { Button } from '@/components/ui/button';
 import {
@@ -101,7 +102,10 @@ export function EntryPage() {
 
       <main className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-8 p-4 sm:p-6">
         {/* Brand */}
-        <div className="flex flex-col items-center gap-2 text-center">
+        <div
+          data-tour="brand"
+          className="flex flex-col items-center gap-2 text-center"
+        >
           <div className="text-muted-foreground text-xs font-medium tracking-[0.2em] uppercase">
             {t('brand.kicker')}
           </div>
@@ -122,6 +126,7 @@ export function EntryPage() {
           </CardHeader>
 
           <CardContent className="flex flex-col items-center gap-3 px-4 sm:px-6">
+            <div data-tour="pin-input">
             <InputOTP
               maxLength={PIN_LENGTH}
               value={pin}
@@ -140,16 +145,26 @@ export function EntryPage() {
                 ))}
               </InputOTPGroup>
             </InputOTP>
+            </div>
             {error && (
               <div className="text-destructive text-center text-sm">{error}</div>
             )}
           </CardContent>
 
           <CardFooter className="flex flex-col gap-2 px-4 sm:px-6">
-            <Button variant="outline" className="w-full" onClick={handleRandom}>
+            <Button
+              data-tour="random-pin"
+              variant="outline"
+              className="w-full"
+              onClick={handleRandom}
+            >
               {t('entry.random')}
             </Button>
-            <Button className="w-full" onClick={handleEnter}>
+            <Button
+              data-tour="enter-room"
+              className="w-full"
+              onClick={handleEnter}
+            >
               {t('entry.enter_room')} →
             </Button>
           </CardFooter>
@@ -169,6 +184,8 @@ export function EntryPage() {
         initialType={storedType}
         onSubmit={handleSubmitName}
       />
+
+      <Onboarding tour="entry" />
     </div>
   );
 }
