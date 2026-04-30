@@ -64,7 +64,10 @@ export function SettingsMenu({
   const { t, i18n } = useTranslation();
   const { theme, setTheme } = useTheme();
   const [tz, setTz] = useTimezone();
-  const currentLang = getLanguage(i18n.language);
+  // 用 resolvedLanguage 拿 i18next 實際使用的 lng（en-US → en）
+  // 不用 i18n.language（會保留 region 後綴）
+  const activeLang = i18n.resolvedLanguage ?? i18n.language;
+  const currentLang = getLanguage(activeLang);
   const currentTz = findTimezoneOption(tz);
 
   return (
@@ -138,7 +141,7 @@ export function SettingsMenu({
           </DropdownMenuSubTrigger>
           <DropdownMenuSubContent>
             <DropdownMenuRadioGroup
-              value={i18n.language}
+              value={activeLang}
               onValueChange={(v) => i18n.changeLanguage(v)}
             >
               {LANGUAGES.map((lang) => (

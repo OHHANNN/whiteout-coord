@@ -18,10 +18,10 @@ i18n
       en: { translation: en },
       ko: { translation: ko },
     },
-    fallbackLng: 'en',
+    fallbackLng: 'zh-TW',
     supportedLngs: SUPPORTED_LANG_CODES,
-    // 讓 `en-US`、`en-GB` 自動降到 `en`、`ko-KR` 降到 `ko`、`zh-TW` 精準匹配
-    // 沒這個的話、装置回 `en-US` 但 supportedLngs 沒有 `en-US`、會直接走 fallbackLng
+    // 讓 'en-US' / 'en-GB' 自動降到 'en'、'ko-KR' 降到 'ko'、'zh-Hant-TW' 降到 'zh-TW'
+    // 沒這個的話、装置回 'en-US' 但 supportedLngs 沒有 'en-US'、會直接走 fallbackLng
     nonExplicitSupportedLngs: true,
     interpolation: {
       escapeValue: false, // React 會處理 XSS
@@ -30,11 +30,6 @@ i18n
       order: ['localStorage', 'navigator'],
       lookupLocalStorage: LANG_STORAGE_KEY,
       caches: ['localStorage'],
-      // 把簡中（zh-CN / zh-Hans）跟其他 zh-* 對應到繁中、不要又掉回 fallback
-      convertDetectedLanguage: (lng) => {
-        if (lng.toLowerCase().startsWith('zh')) return 'zh-TW';
-        return lng;
-      },
     },
   });
 

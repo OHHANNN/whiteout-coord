@@ -17,7 +17,8 @@ import { LANGUAGES, getLanguage } from '@/i18n/languages';
  */
 export function LangSwitch() {
   const { i18n } = useTranslation();
-  const current = getLanguage(i18n.language);
+  // resolvedLanguage：i18next 實際 matched 的 lng（en-US → en）
+  const current = getLanguage(i18n.resolvedLanguage ?? i18n.language);
 
   return (
     <DropdownMenu>
