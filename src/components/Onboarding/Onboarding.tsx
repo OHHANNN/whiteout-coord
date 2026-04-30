@@ -1,8 +1,9 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import Joyride, {
-  type CallBackProps,
+import {
+  Joyride,
   STATUS,
+  type EventData,
   type Step,
 } from 'react-joyride';
 
@@ -29,8 +30,11 @@ interface OnboardingProps {
 }
 
 /**
- * react-joyride 包一層、把 tour 配置 + 完成判斷一次處理掉。
- * Pages 只要：<Onboarding tour="commander" />
+ * react-joyride v3 包一層 · v3 改動：
+ *   - named export `Joyride`（v2 是 default）
+ *   - 用 `onEvent` callback 不是 `callback`
+ *   - `skipBeacon` 從 step level 改到 Options 全域
+ *   - styles 直接 inline 在 props（primaryColor / textColor 等）
  */
 export function Onboarding({ tour, forceRun, onForceFinish }: OnboardingProps) {
   const { t } = useTranslation();
@@ -50,7 +54,7 @@ export function Onboarding({ tour, forceRun, onForceFinish }: OnboardingProps) {
     }
   }, [tour, t]);
 
-  const handleCallback = (data: CallBackProps) => {
+  const handleEvent = (data: EventData) => {
     if (data.status === STATUS.FINISHED || data.status === STATUS.SKIPPED) {
       if (forceRun) {
         onForceFinish?.();
@@ -64,12 +68,11 @@ export function Onboarding({ tour, forceRun, onForceFinish }: OnboardingProps) {
     <Joyride
       steps={steps}
       run={run}
-      callback={handleCallback}
+      onEvent={handleEvent}
       continuous
       showProgress
       showSkipButton
-      disableScrolling={false}
-      scrollOffset={100}
+      skipBeacon
       locale={{
         back: t('onboarding.back'),
         close: t('onboarding.close'),
@@ -77,40 +80,12 @@ export function Onboarding({ tour, forceRun, onForceFinish }: OnboardingProps) {
         next: t('onboarding.next'),
         skip: t('onboarding.skip'),
       }}
-      styles={{
-        options: {
-          // 跟 shadcn theme tokens 對齊
-          primaryColor: 'oklch(0.21 0.006 285.885)', // primary
-          textColor: 'oklch(0.141 0.005 285.823)', // foreground
-          backgroundColor: 'oklch(1 0 0)', // background
-          arrowColor: 'oklch(1 0 0)',
-          overlayColor: 'rgba(0, 0, 0, 0.5)',
-          zIndex: 100,
-        },
-        tooltip: {
-          borderRadius: 8,
-          padding: 16,
-        },
-        tooltipTitle: {
-          fontSize: 16,
-          fontWeight: 600,
-        },
-        tooltipContent: {
-          fontSize: 14,
-          padding: '8px 0',
-          lineHeight: 1.5,
-        },
-        buttonNext: {
-          borderRadius: 6,
-          fontSize: 14,
-        },
-        buttonBack: {
-          fontSize: 14,
-        },
-        buttonSkip: {
-          fontSize: 14,
-        },
-      }}
+      primaryColor="oklch(0.21 0.006 285.885)"
+      textColor="oklch(0.141 0.005 285.823)"
+      backgroundColor="oklch(1 0 0)"
+      arrowColor="oklch(1 0 0)"
+      overlayColor="rgba(0, 0, 0, 0.5)"
+      zIndex={100}
     />
   );
 }
