@@ -17,6 +17,16 @@ export type MemberStatus = 'ready' | 'adjusting' | 'offline' | 'manual';
 export type ParticipantType = 'driver' | 'passenger';
 
 /**
+ * 車頭出兵比例（盾兵：矛兵：弓兵）。WoS 集結出兵時調比例的 quick reference。
+ * 純展示用、不參與計算。每欄 0–99，全 0 視為未設定。
+ */
+export interface TroopRatio {
+  shield: number;
+  spear: number;
+  archer: number;
+}
+
+/**
  * 波次預設 · commander 預先存好的目標時間 / 建築 / 座標。
  * 切換到某波時，數值會被「載入」到 RoomMeta 的 target* 欄位、所有人即時同步。
  */
@@ -126,6 +136,10 @@ export interface Member {
    * - status 預設 'manual'
    */
   isManual?: boolean;
+  /**
+   * 出兵比例（盾兵：矛兵：弓兵）。Optional：未設或全 0 → UI 顯示 — 佔位
+   */
+  troopRatio?: TroopRatio;
 }
 
 export interface Room {

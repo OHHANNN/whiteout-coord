@@ -22,7 +22,9 @@ import { useTimezone } from '@/hooks/useTimezone';
 import { formatDuration, formatTimeInTz, parseMarchInput } from '@/lib/time';
 import { cn } from '@/lib/utils';
 
-import type { DriverView, Member, MemberStatus, RoomMeta } from '@/types/room';
+import { TroopRatioCell } from '@/components/TroopRatioCell/TroopRatioCell';
+
+import type { DriverView, Member, MemberStatus, RoomMeta, TroopRatio } from '@/types/room';
 import { getLaunchAtMs } from '@/types/room';
 
 interface DriverTableProps {
@@ -34,6 +36,7 @@ interface DriverTableProps {
   onSetOffset: (uid: string, seconds: number) => void;
   onSetType: (uid: string, type: 'driver' | 'passenger') => void;
   onSetCounterRally: (uid: string, value: boolean) => void;
+  onSetTroopRatio: (uid: string, ratio: TroopRatio) => void;
   onRemove: (uid: string) => void;
   onTransferCommander?: (uid: string, name: string) => void;
   onEditManual?: (uid: string) => void;
@@ -222,6 +225,7 @@ export function DriverTable({
   onSetOffset,
   onSetType,
   onSetCounterRally,
+  onSetTroopRatio,
   onRemove,
   onTransferCommander,
   onEditManual,
@@ -334,6 +338,7 @@ export function DriverTable({
               <TableHead className="font-medium">{t('room.col_driver')}</TableHead>
               <TableHead className="font-medium">{t('room.col_march')}</TableHead>
               <TableHead className="font-medium">{t('room.col_rally')}</TableHead>
+              <TableHead className="font-medium">{t('room.col_troop')}</TableHead>
               <TableHead className="font-medium">{t('room.col_offset')}</TableHead>
               <TableHead className="font-medium">{t('room.col_launch')}</TableHead>
               <TableHead className="font-medium">
@@ -438,6 +443,15 @@ export function DriverTable({
                       {(member.rallyWindowSeconds ?? 300) / 60}m
                     </span>
                   )}
+                </TableCell>
+
+                {/* 兵種比例 */}
+                <TableCell>
+                  <TroopRatioCell
+                    ratio={member.troopRatio}
+                    editable={canEditThisRow}
+                    onSet={(r) => onSetTroopRatio(uid, r)}
+                  />
                 </TableCell>
 
                 {/* 偏移 */}
@@ -643,6 +657,16 @@ export function DriverTable({
                     {(member.rallyWindowSeconds ?? 300) / 60}m
                   </span>
                 )}
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-muted-foreground text-xs">
+                  {t('room.col_troop')}
+                </span>
+                <TroopRatioCell
+                  ratio={member.troopRatio}
+                  editable={canEditThisRow}
+                  onSet={(r) => onSetTroopRatio(uid, r)}
+                />
               </div>
               <div className="flex items-center justify-between gap-2">
                 <span className="text-muted-foreground text-xs">

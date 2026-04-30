@@ -376,6 +376,17 @@ export function RoomPage() {
     }
   };
 
+  const handleSetTroopRatio = (
+    targetUid: string,
+    ratio: { shield: number; spear: number; archer: number }
+  ) => {
+    if (targetUid === user?.uid) {
+      updateMyMember({ troopRatio: ratio });
+    } else if (isCommander) {
+      updateMember(targetUid, { troopRatio: ratio });
+    }
+  };
+
   const handleTransferCommander = async (targetUid: string, targetName: string) => {
     const ok = await confirm({
       message: t('room.confirm_transfer', { name: targetName }),
@@ -703,6 +714,7 @@ export function RoomPage() {
               onSetOffset={handleSetOffset}
               onSetType={handleSetType}
               onSetCounterRally={handleSetCounterRally}
+              onSetTroopRatio={handleSetTroopRatio}
               onRemove={handleRemoveMember}
               onTransferCommander={
                 isCommander ? handleTransferCommander : undefined

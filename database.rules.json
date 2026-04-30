@@ -99,6 +99,13 @@
             "isManual": {
               ".validate": "newData.isBoolean() || newData.val() == null"
             },
+            "troopRatio": {
+              ".validate": "newData.hasChildren(['shield', 'spear', 'archer']) || !newData.exists()",
+              "shield": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 99 || newData.val() == null" },
+              "spear":  { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 99 || newData.val() == null" },
+              "archer": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 99 || newData.val() == null" },
+              "$other": { ".validate": false }
+            },
             "$other": { ".validate": false }
           }
         },
